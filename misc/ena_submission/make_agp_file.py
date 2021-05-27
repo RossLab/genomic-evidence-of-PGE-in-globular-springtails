@@ -1,8 +1,7 @@
 from sys import stdout
 from sys import argv
 
-stdout.write("""
-##agp-version	2.0
+stdout.write("""##agp-version	2.0
 # ORGANISM: Allacma fusca
 # TAX_ID: 39272
 # ASSEMBLY NAME: Afus1_asm01
@@ -13,7 +12,7 @@ stdout.write("""
 
 with open(argv[1], 'r') as ff:
     for line in ff:
-        if line.startswith(">"):
+        if line.startswith(">Path"):
             header = line.rstrip('\n')
             scf, contigs = header.split('[')
             scf = scf[1:-1] # do I want > in there?
@@ -41,9 +40,9 @@ with open(argv[1], 'r') as ff:
                     stdout.write("{}\t{}\t{}\t{}\tU\t100\tscaffold\tyes\talign_trnscpt\n".format(scf, scf_from, scf_from + 99, part_number))
                     part_number += 1
                     scf_from += 100
-        #     seq = ''
-        #
-        # else:
-        #     seq += line.rstrip('\n')
-        #     break
-
+        if line.startswith(">NODE"):
+            header = line.rstrip('\n')[1:]
+            scf = "_".join(header.split('_')[0:2])
+            contig_len = header.split('_')[3]
+            ctg = header
+            stdout.write("{}\t1\t{}\t1\tW\t{}\t1\t{}\t+\n".format(scf, contig_len, ctg, contig_len))
