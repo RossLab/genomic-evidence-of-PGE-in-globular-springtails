@@ -1,0 +1,11 @@
+STUDY   PRJEB44694
+SAMPLE   ERS6488033
+ASSEMBLYNAME   Afus1_asm01
+ASSEMBLY_TYPE   isolate
+COVERAGE   50
+PROGRAM   SPAdes v3.13.1
+PLATFORM   HiSeq X Ten
+MOLECULETYPE   genomic DNA
+DESCRIPTION   The assembly was done in two rounds, first using all reads and blobtools to filter out contamination reads, the filtered reads were assembled again in contigs and those were scaffolded using SCUBAT_v2
+RUN_REF   ERR5959256
+FLATFILE   submit_Afus1_asm01.embl.gz
