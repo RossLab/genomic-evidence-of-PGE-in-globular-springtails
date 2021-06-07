@@ -2,3 +2,4 @@ data
 figureslogs
 logs
 misc
+.snakemake/
