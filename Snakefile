@@ -18,7 +18,7 @@ with open('tables/Allacma_reseq_samples.tsv') as tab :
 			raw_read_files.append(raw_lib_file)
 			sample_accesions[ind] = sample_accesions.get(ind, []) + [trimmed_lib_file]
 
-localrules: help
+localrules: help, download_all_reads, map_all
 
 ##
 ## help : print this help
@@ -26,9 +26,17 @@ rule help :
 	shell :
 		"sed -n 's/^##//p' Snakefile"
 
+##
+## download_all_reads : download all raw reads from ENA
 rule download_all_reads :
 	input :
 		raw_read_files
+
+##
+## map_all : map all reads to corresponding references
+rule map_all :
+	input :
+		expand("data/mapped_reads/{ind}.rg.sorted.bam", ind=reseq_samples), "data/mapped_reads/Afus1.rg.sorted.bam"
 
 rule download_reads :
 	threads : 1

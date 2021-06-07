@@ -6,10 +6,20 @@ This is a supplementary material. It allows, nearly perfect, replication of the 
 
 The sequenced materials resequencing data: PRJEB44694
 
-#### organisation of the input data
+#### organisation of the data
 
-`data/reseq/<ID>/...`
-`data/reference/<ID>/...`
+All data will be automatically downloaded from EBI using
+
+```
+./snakemake_clust.sh download_all_reads
+```
+
+The data
+
+**Allacma fusca**
+
+- `data/raw_reads/{individual}/{accesion}_1.fastq.g`
+- `data/reference/Afus1/genome.fa.gz`
 
 
 #### reference genome and X and A assignments
@@ -30,6 +40,12 @@ bowtie2 --very-sensitive-local -p 16 -x $REFERENCE \
         --rg-id "$RG_ID" --rg SM:"$SAMPLE" --rg PL:ILLUMINA --rg LB:LIB_"$SAMPLE" \
         | samtools view -h -q -20 \
         | samtools sort -@10 -O bam - > $SAMPLE.rg.sorted.bam
+```
+
+for all the samples run
+
+```
+./snakemake_clust.sh map_all
 ```
 
 **Allacma**
