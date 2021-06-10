@@ -1,0 +1,17 @@
+#checklist_accession	ERC000011
+#unique_name_prefix
+sample_alias	tax_id	scientific_name	common_name	sample_title	sample_description	cell_type	collection_date	isolation_source	lat_lon	collected_by	sex
+#template	39272	Allacma fusca		Allacma fusca individual collected for whole genome resequencing		whole body	7.8.2020	freeliving individual found on bark of a mossy tree	55.924039, -3.196509	Kamil S. Jaron & Christina N. Hodson	male
+#units
+BH3-2	39272	Allacma fusca	NA	Allacma fusca individual collected for whole genome resequencing	NA	whole body	2020-08-07	freeliving individual found on bark of a mossy tree	55.924039, -3.196509	Kamil S. Jaron & Christina N. Hodson	male
+WW1-2	39272	Allacma fusca	NA	Allacma fusca individual collected for whole genome resequencing	NA	whole body	2020-08-03	freeliving individual found on bark of a mossy tree	51.773444, -1.319222	Kamil S. Jaron & Christina N. Hodson	female
+WW1-4	39272	Allacma fusca	NA	Allacma fusca individual collected for whole genome resequencing	NA	whole body	2020-08-03	freeliving individual found on bark of a mossy tree	51.773444, -1.319222	Kamil S. Jaron & Christina N. Hodson	female
+WW2-1	39272	Allacma fusca	NA	Allacma fusca individual collected for whole genome resequencing	NA	whole body	2020-08-03	freeliving individual found on bark of a mossy tree	51.775212, -1.315594	Kamil S. Jaron & Christina N. Hodson	female
+WW2-5	39272	Allacma fusca	NA	Allacma fusca individual collected for whole genome resequencing	NA	whole body	2020-08-03	freeliving individual found on bark of a mossy tree	51.775212, -1.315594	Kamil S. Jaron & Christina N. Hodson	female
+WW2-6	39272	Allacma fusca	NA	Allacma fusca individual collected for whole genome resequencing	NA	whole body	2020-08-03	freeliving individual found on bark of a mossy tree	51.775212, -1.315594	Kamil S. Jaron & Christina N. Hodson	female
+WW3-1	39272	Allacma fusca	NA	Allacma fusca individual collected for whole genome resequencing	NA	whole body	2020-08-03	freeliving individual found on bark of a mossy tree	51.779333, -1.339361	Kamil S. Jaron & Christina N. Hodson	female
+WW5-1	39272	Allacma fusca	NA	Allacma fusca individual collected for whole genome resequencing	NA	whole body	2020-08-04	freeliving individual found on bark of a mossy tree	51.779333, -1.339361	Kamil S. Jaron & Christina N. Hodson	female
+WW5-3	39272	Allacma fusca	NA	Allacma fusca individual collected for whole genome resequencing	NA	whole body	2020-08-04	freeliving individual found on bark of a mossy tree	51.779333, -1.339361	Kamil S. Jaron & Christina N. Hodson	female
+WW5-4	39272	Allacma fusca	NA	Allacma fusca individual collected for whole genome resequencing	NA	whole body	2020-08-04	freeliving individual found on bark of a mossy tree	51.779333, -1.339361	Kamil S. Jaron & Christina N. Hodson	female
+WW5-5	39272	Allacma fusca	NA	Allacma fusca individual collected for whole genome resequencing	NA	whole body	2020-08-04	freeliving individual found on bark of a mossy tree	51.779333, -1.339361	Kamil S. Jaron & Christina N. Hodson	female
+WW5-6	39272	Allacma fusca	NA	Allacma fusca individual collected for whole genome resequencing	NA	whole body	2020-08-04	freeliving individual found on bark of a mossy tree	51.779333, -1.339361	Kamil S. Jaron & Christina N. Hodson	female
