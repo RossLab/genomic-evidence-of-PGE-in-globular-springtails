@@ -73,10 +73,18 @@ Calculation of expectation of allele coverages under different scenarios
 
 Allele coverage distributions
 
+```bash
+qsub -o logs -e logs -cwd -N SNP_filt -V -pe smp64 1 -b yes 'scripts/subset_SNPs_to_chromosomes.sh data/SNP_calls/freebayes_all_samples_raw.vcf tables/chrosmome_asn.tsv'
+
+qsub -o logs -e logs -cwd -N SNP_filt -V -pe smp64 1 -b yes 'scripts/subset_SNPs_to_chromosomes.sh data/SNP_calls/freebayes_Ocin2_raw.vcf tables/chrosmome_asn.tsv'
+```
 
 ### hypothesis testing
 
-
+```
+data/SNP_calls/freebayes_all_samples_raw_filt_asn_only.vcf
+data/SNP_calls/freebayes_Ocin2_raw_filt_asn_only.vcf
+```
 
 ### Heterozygous SNP analysis
 
