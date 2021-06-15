@@ -58,11 +58,23 @@ Mapping of the reference reads to reference genome
 
 ```
 scripts/mapping_reference_reads_Afus1.sh
+
+samtools depth data/mapped_reads/BH3-2.rg.sorted.rmdup.bam | scripts/depth2depth_per_contig_median.py > data/mapped_reads/per_scf_cov_medians_BH3-2.tsv
+samtools depth data/mapped_reads/BH3-2.rg.sorted.rmdup.bam | scripts/depth2depth_per_contig_median.py > data/mapped_reads/per_scf_cov_medians_Afus1.tsv
 ```
 
 **Dicyrtomina**
 
+```
+samtools depth data/mapped_reads/Dorn_HP1-3_reads2asm0.bam | scripts/depth2depth_per_contig_median.py > data/mapped_reads/per_scf_cov_medians_Dorn_HP1-3.tsv
+samtools depth data/mapped_reads/Dorn_BH2-1_reads2asm0.bam | scripts/depth2depth_per_contig_median.py > data/mapped_reads/per_scf_cov_medians_Dorn_BH2-1.tsv
+```
 
+**Orchesella**
+
+```
+samtools depth data/mapped_reads/Ocin2.rg.sorted.bam | scripts/depth2depth_per_contig_median.py > data/mapped_reads/per_scf_cov_medians_Ocin2.tsv
+```
 
 ### Expected coverages of heterozygous loci
 
@@ -74,9 +86,19 @@ Calculation of expectation of allele coverages under different scenarios
 Allele coverage distributions
 
 ```bash
-qsub -o logs -e logs -cwd -N SNP_filt -V -pe smp64 1 -b yes 'scripts/subset_SNPs_to_chromosomes.sh data/SNP_calls/freebayes_all_samples_raw.vcf tables/chrosmome_asn.tsv'
+qsub -o logs -e logs -cwd -N SNP_filt -V -pe smp64 1 -b yes 'scripts/subset_SNPs_to_chromosomes.sh data/SNP_calls/freebayes_all_samples_raw.vcf tables/chr_assignments_Afus1.tsv'
 
-qsub -o logs -e logs -cwd -N SNP_filt -V -pe smp64 1 -b yes 'scripts/subset_SNPs_to_chromosomes.sh data/SNP_calls/freebayes_Ocin2_raw.vcf tables/chrosmome_asn.tsv'
+qsub -o logs -e logs -cwd -N SNP_filt -V -pe smp64 1 -b yes 'scripts/subset_SNPs_to_chromosomes.sh data/SNP_calls/freebayes_Ocin2_raw.vcf tables/chr_assignments_Afus1.tsv'
+```
+
+```
+scripts/sort_variants_with_respect_to_chromosomes.py -o data/SNP_calls/freebayes_Afus_filt_sorted data/SNP_calls/freebayes_Afus_filt.vcf tables/chr_assignments_Afus1.tsv
+
+scripts/sort_variants_with_respect_to_chromosomes.py -o data/SNP_calls/freebayes_BH2-1_filt_sorted data/SNP_calls/freebayes_BH2-1_filt.vcf tables/chr_assignments_Dorn_BH2-1.tsv
+
+scripts/sort_variants_with_respect_to_chromosomes.py -o data/SNP_calls/freebayes_HP1-3_filt_sorted data/SNP_calls/freebayes_HP1-3_filt.vcf tables/chr_assignments_Dorn_HP1-3.tsv
+
+scripts/sort_variants_with_respect_to_chromosomes.py -o data/SNP_calls/freebayes_Ocin2_filt_sorted data/SNP_calls/freebayes_Ocin2_filt.vcf tables/chr_assignments_Ocin1.tsv
 ```
 
 ### hypothesis testing
@@ -114,7 +136,7 @@ done
 male_snp_tab <- read.table("data/SNP_calls/BH3-2_asn_snps.tsv")
 colnames(male_snp_tab) <- c('scf', 'pos', 'genotype', 'total_cov', 'ref_cov', 'alt_cov')
 
-asn_tab <- read.table('tables/chrosmome_asn.tsv', header = T)
+asn_tab <- read.table('tables/chr_assignments_Afus1.tsv', header = T)
 strlen <- max(nchar(asn_tab$scf))
 
 names2tokens <- function(scf_name){

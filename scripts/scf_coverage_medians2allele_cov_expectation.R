@@ -1,5 +1,5 @@
-# 'data/mapped_reads/Afus1_per_scf_cov_medians.tsv'
-BH3_medians <- read.table('data/mapped_reads/BH3-2_per_scf_cov_medians.tsv', col.names = c('scf', 'cov_median'))
+# 'data/mapped_reads/per_scf_cov_medians_Afus1.tsv'
+BH3_medians <- read.table('data/mapped_reads/per_scf_cov_medians_BH3-2.tsv', col.names = c('scf', 'cov_median'))
 
 asn_tab <- read.table('tables/chrosmome_asn.tsv', header = T)
 strlen <- max(nchar(c(asn_tab$scf, BH3_medians$scf)))
