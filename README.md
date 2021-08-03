@@ -18,9 +18,8 @@ The data
 
 **Allacma fusca**
 
-- `data/raw_reads/{individual}/{accesion}_1.fastq.g`
+- `data/raw_reads/{individual}/{accesion}_1.fastq.gz`
 - `data/reference/Afus1/genome.fa.gz`
-
 
 #### reference genome and X and A assignments
 
@@ -199,3 +198,17 @@ lines(c(57.45, 57.45), c(0, 100), lwd = 2, lty = 2)
 
 legend('topright', c('X coverage expectation', 'A 0/1 major (maternal)', 'A 0/1 minor (paternal)'), pch = c(NA, 20, 20), lty = c(2, NA, NA), cex = 1.3, bty = 'n', col = pal)
 ```
+
+### plotting notes
+
+
+BH2-3 plots:
+  1. Allele cov ratio (`figures/het_autosomal_allele_supports/autosomal_and_X_variant_coverages_BH3-2.png`) plotted by
+
+  ```bash
+  Rscript scripts/plot_heterozygous_autosomal_allele_coverages_BH3-2.R
+  ```
+
+  using
+    - `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_X.tsv`,
+    - `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_A.tsv`
