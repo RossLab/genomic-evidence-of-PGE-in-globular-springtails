@@ -3,7 +3,7 @@
 # IN_VCF=data/SNP_calls/freebayes_all_samples_raw.vcf
 # IN_VCF=data/SNP_calls/freebayes_Ocin2_raw.vcf
 IN_VCF=$1
-# CHR_ASN=tables/chrosmome_asn.tsv
+# CHR_ASN=tables/chr_assignments_Afus1.tsv
 # CHR_ASN=tables/Ocin_X-linage_assigment.tsv
 CHR_ASN=$2
 

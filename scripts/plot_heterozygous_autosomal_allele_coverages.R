@@ -5,7 +5,7 @@ ind <- args[1]
 snp_tab <- read.table(args[2])
 colnames(snp_tab) <- c('scf', 'pos', 'genotype', 'total_cov', 'ref_cov', 'alt_cov')
 
-asn_tab <- read.table('tables/chrosmome_asn.tsv', header = T)
+asn_tab <- read.table('tables/chr_assignments_Afus1.tsv', header = T)
 strlen <- max(nchar(asn_tab$scf))
 
 names2tokens <- function(scf_name){
