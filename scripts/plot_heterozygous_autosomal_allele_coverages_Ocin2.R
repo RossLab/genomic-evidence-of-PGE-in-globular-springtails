@@ -12,17 +12,38 @@ colnames(snp_tab_X) <- c('scf', 'pos', 'genotype', 'total_cov', 'ref_cov', 'alt_
 snp_tab_A$cov_minor <- apply(snp_tab_A[, c('ref_cov', 'alt_cov')], 1, min)
 snp_tab_X$cov_minor <- apply(snp_tab_X[, c('ref_cov', 'alt_cov')], 1, min)
 
-informative_A_snps <- snp_tab_A[snp_tab_A$genotype == '0/1' & snp_tab_A$total_cov < 120 & snp_tab_A$total_cov > 25, ]
-informative_X_snps <- snp_tab_X[snp_tab_X$genotype == '1/1' & snp_tab_X$total_cov < 120 & snp_tab_X$total_cov > 120, ]
+informative_A_snps <- snp_tab_A[snp_tab_A$genotype == '0/1' & snp_tab_A$total_cov < 120 & snp_tab_A$total_cov > 50, ]
+informative_X_snps <- snp_tab_X[snp_tab_X$genotype == '1/1' & snp_tab_X$total_cov < 120 & snp_tab_X$total_cov > 5, ]
+coverage_data <- list(X = informative_X_snps$total_cov, A_minor = informative_A_snps$cov_minor, A_major = informative_A_snps$total_cov - informative_A_snps$cov_minor)
 
-pal <- c('black', rgb(0.8, 0.05, 0.1, 0.55), rgb(0.02, 0.45, 0.65, 0.55))
+# random_subset <- sample(1:nrow(informative_A_snps), 50000)
+# library(hexbin)
+# library(RColorBrewer)
+# # plot(informative_A_snps$total_cov[random_subset] ~ informative_A_snps$cov_minor[random_subset])
+#
+# # Make the plot
+# bin <- hexbin(informative_A_snps$total_cov[random_subset], informative_A_snps$cov_minor[random_subset], xbins=40)
+# my_colors <- colorRampPalette(rev(brewer.pal(11,'Spectral')))
+# plot(bin, main="" , colramp=my_colors , legend=F )
 
-hist( - informative_X_snps$cov_minor, col = pal[1], main = paste('Coverages supporting autosomal heterozygous alleles in', ind), xlab = 'Coverage', breaks = 60, freq = F, xlim = c(0, 120), ylim = c(0, 0.05))
-hist(informative_A_snps$cov_minor, col = pal[2], add = T, breaks = 30, freq = F, border = F)
-hist(informative_A_snps$total_cov - informative_A_snps$cov_minor, col = pal[3], add = T, breaks = 60, freq = F, border = F)
+figure_name = 'figures/het_autosomal_allele_supports/autosomal_and_X_variant_coverages_Ocin2.png'
+pal <- c(rgb(0, 0, 0, 0.7), rgb(0.8, 0.05, 0.1, 0.55), rgb(0.02, 0.45, 0.65, 0.55))
+cex_legend <- 0.75
+xlim <- c(0, 100)
+# expectation <- c(19.47, 19.47)
+main <- ''# paste('Coverages supporting autosomal heterozygous alleles in', ind)
 
-legend('topright', pch = 20, col = pal, c('X chromosome allele', 'minor allele', 'major allele'), bty = 'n')
+source('scripts/fixed_bin_historgram.R')
 
-# hist(informative_X_snps)
+png(figure_name, units="in", width=5, height=5, res=300)
 
-hist(informative_A_snps$cov_minor / informative_A_snps$total_cov)
+# 'c(bottom, left, top, right)'
+par(mar = c(4, 4, 1, 1) + 0.1)
+fixed_bin_histogram(coverage_data, pal, main = main, xlab = 'Coverage support', xlim = xlim, bins = 50, freq = F, default_legend = F)
+
+# lines(expectation, c(0, 1e6), lwd = 3, lty = 2)
+legend('topright', pch = 20, col = pal, c('X chromosome alleles', 'A minor alleles', 'A major alleles'), bty = 'n', cex = cex_legend)
+
+dev.off()
+
+# hist(informative_A_snps$cov_minor / informative_A_snps$total_cov)

@@ -9,7 +9,7 @@
 #   ... - all addenitional paramaters will be passed to the "plot" function rendering all the histograms
 
 fixed_bin_histogram <- function(list_of_things_to_display, pal = NA, bins = 50,
-                                xlim = NA, ylim = NA, probability = F,
+                                xlim = NA, ylim = NA, freq = F,
                                 border = F, default_legend = T,
                                 main = '', xlab = 'Value', ylab = NA, ...){
 
@@ -18,6 +18,7 @@ fixed_bin_histogram <- function(list_of_things_to_display, pal = NA, bins = 50,
 	}
 
 	if ( length(xlim) != 2 ){
+    print('getting xlim')
 		xmin <- min(sapply(list_of_things_to_display, min))
 		xmax <- max(sapply(list_of_things_to_display, max))
 		xlim <- c(xmin, xmax)
@@ -27,13 +28,15 @@ fixed_bin_histogram <- function(list_of_things_to_display, pal = NA, bins = 50,
 	hist_data <- lapply(list_of_things_to_display, function(x){ x[x > xlim[1] & x < xlim[2]] } )
 	histograms <- lapply(hist_data, hist, breaks = ax, plot = F)
 
-	if ( probability ){
+	if ( !freq ){
+    print('changing counts to densities')
 		for (i in 1:length(histograms)){
 			histograms[[i]]$counts <- histograms[[i]]$density
 		}
 	}
 
 	if ( any(is.na(ylim)) ){
+    print('rescaling ylim')
 		bar_size_extremes <- sapply(histograms, function(x){ range(x$counts) } )
 		ymin <- min(bar_size_extremes[1,])
 		ymax <- max(bar_size_extremes[2,])
@@ -41,7 +44,7 @@ fixed_bin_histogram <- function(list_of_things_to_display, pal = NA, bins = 50,
 	}
 
 	if( is.na(ylab) ){
-		ylab <- ifelse(probability, 'Density', 'Frequency')
+		ylab <- ifelse(freq, 'Frequency', 'Density')
 	}
 
 	for (i in 1:length(list_of_things_to_display)){
