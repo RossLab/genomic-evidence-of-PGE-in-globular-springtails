@@ -10,9 +10,8 @@
 
 fixed_bin_histogram <- function(list_of_things_to_display, pal = NA, bins = 50,
                                 xlim = NA, ylim = NA, probability = F,
-																breaks = NA, border = F,
-                                default_legend = T,
-																main = '', xlab = 'Value', ylab = NA, ...){
+                                border = F, default_legend = T,
+                                main = '', xlab = 'Value', ylab = NA, ...){
 
 	if ( any(is.na(pal)) ){
 		pal <- 1:length(list_of_things_to_display)
