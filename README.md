@@ -58,15 +58,14 @@ Mapping of the reference reads to reference genome
 ```
 scripts/mapping_reference_reads_Afus1.sh
 
-samtools depth data/mapped_reads/BH3-2.rg.sorted.rmdup.bam | scripts/depth2depth_per_contig_median.py > data/mapped_reads/per_scf_cov_medians_BH3-2.tsv
-samtools depth data/mapped_reads/BH3-2.rg.sorted.rmdup.bam | scripts/depth2depth_per_contig_median.py > data/mapped_reads/per_scf_cov_medians_Afus1.tsv
-# scripts/bam2per_scf_medians.sh data/mapped_reads/Afus1.rg.sorted.rmdup.bam data/mapped_reads/Afus1_per_scf_cov_medians.tsv
+samtools depth data/mapped_reads/BH3-2.rg.sorted.rmdup.bam | scripts/depth2cov_per_contig.py > data/mapped_reads/BH3-2_cov_per_scf.tsv
+samtools depth data/mapped_reads/Afus1.rg.sorted.rmdup.bam | scripts/depth2cov_per_contig.py > data/mapped_reads/Afus1_cov_per_scf.tsv
 ```
 
 **Orchesella**
 
 ```
-samtools depth data/mapped_reads/Ocin2.rg.sorted.bam | scripts/depth2depth_per_contig_median.py > data/mapped_reads/per_scf_cov_medians_Ocin2.tsv
+samtools depth data/mapped_reads/Ocin2.rg.sorted.bam | scripts/depth2cov_per_contig.py > data/mapped_reads/Ocin2_cov_per_scf.tsv
 ```
 
 ### Expected coverages of heterozygous loci
@@ -224,3 +223,26 @@ Allele cov ratio plots:
    - `tables/chr_assignments_Afus1.tsv`
    - `data/SNP_calls/freebayes_Afus_filt_sorted_Afus1_A.tsv`
    - `data/SNP_calls/freebayes_Afus_filt_sorted_Afus1_X.tsv`
+
+   3. Ocin2
+
+   ```bash
+   Rscript scripts/plot_heterozygous_autosomal_allele_coverages_Ocin2.R
+   ```   
+
+   4. All females
+
+   ```bash
+   for ind in WW5-6 WW5-4 BH3-2 WW3-1 WW2-1 WW1-2 WW2-5 WW5-1 WW5-5 WW1-4 WW2-6 WW5-3; do
+     Rscript scripts/plot_heterozygous_autosomal_allele_coverages.R "$ind" data/SNP_calls/run0/"$ind"_asn_snps.tsv figures/het_autosomal_allele_supports/"$ind".png;
+   done
+   ```
+
+Coverage plots:
+  kmers:
+    ```bash
+      for dir in data/genome_profiling/*; do
+        SAMPLE=$(echo $dir | cut -f 3 -d "/");
+        genomescope.R -i $dir/kmer_k21_full.hist -o $dir -n $SAMPLE;
+      done
+    ```
