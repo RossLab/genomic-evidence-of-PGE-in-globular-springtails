@@ -202,13 +202,25 @@ legend('topright', c('X coverage expectation', 'A 0/1 major (maternal)', 'A 0/1 
 ### plotting notes
 
 
-BH2-3 plots:
-  1. Allele cov ratio (`figures/het_autosomal_allele_supports/autosomal_and_X_variant_coverages_BH3-2.png`) plotted by
+Allele cov ratio plots:
+  1. BH2-3 (`figures/het_autosomal_allele_supports/autosomal_and_X_variant_coverages_BH3-2.png`) plotted by
 
   ```bash
   Rscript scripts/plot_heterozygous_autosomal_allele_coverages_BH3-2.R
   ```
 
-  using
-    - `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_X.tsv`,
-    - `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_A.tsv`
+  using:
+   -  `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_X.tsv`
+   -  `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_A.tsv`
+
+  2. Afus1
+
+  ```bash
+  Rscript scripts/plot_heterozygous_autosomal_allele_coverages_Afus1.R
+  ```
+
+  using:
+   - `data/mapped_reads/Afus1_per_scf_cov_medians.tsv`
+   - `tables/chr_assignments_Afus1.tsv`
+   - `data/SNP_calls/freebayes_Afus_filt_sorted_Afus1_A.tsv`
+   - `data/SNP_calls/freebayes_Afus_filt_sorted_Afus1_X.tsv`
