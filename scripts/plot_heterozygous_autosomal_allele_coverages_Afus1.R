@@ -17,9 +17,9 @@ per_scf_cov_medians <- per_scf_cov_medians[!is.na(per_scf_cov_medians$chr), ]
 autosomes <- per_scf_cov_medians$chr == 'A'
 sex_chr <- per_scf_cov_medians$chr == 'X'
 
-# plot(per_scf_cov_medians$len ~ per_scf_cov_medians$cov_median, pch = 20)
-# points(per_scf_cov_medians$len[autosomes] ~ per_scf_cov_medians$cov_median[autosomes], col = 'yellow')
-# points(per_scf_cov_medians$len[sex_chr] ~ per_scf_cov_medians$cov_median[sex_chr], col = 'green')
+# plot(per_scf_cov_medians$len ~ per_scf_cov_medians$cov, pch = 20)
+# points(per_scf_cov_medians$len[autosomes] ~ per_scf_cov_medians$cov[autosomes], col = 'yellow')
+# points(per_scf_cov_medians$len[sex_chr] ~ per_scf_cov_medians$cov[sex_chr], col = 'green')
 
 autosome_ks <- density(per_scf_cov_medians[autosomes, 'cov'], bw = "nrd0", adjust = 2.5, weights = per_scf_cov_medians$len[autosomes] / sum(per_scf_cov_medians$len[autosomes]))
 second_deriv <- diff(sign(diff(autosome_ks$y)))
@@ -30,7 +30,10 @@ peak_heights <- autosome_ks$y[which(second_deriv == -2) + 1]
 peak_covs
 peak_heights
 diploid = 95.03840
+# kmer based 89
+cleaned_cov_medians <- per_scf_cov_medians[per_scf_cov_medians$cov > 20 & per_scf_cov_medians$cov < 120, ]
 
+ks <- density(per_scf_cov_medians$cov, bw = "nrd0", adjust = 2.5, weights = per_scf_cov_medians$len / sum(per_scf_cov_medians$len))
 
 sex_ks <- density(per_scf_cov_medians[sex_chr, 'cov'], bw = "nrd0", adjust = 4, weights = per_scf_cov_medians$len[sex_chr] / sum(per_scf_cov_medians$len[sex_chr]))
 plot(sex_ks)
@@ -57,14 +60,16 @@ snp_tab_A$cov_minor <- apply(snp_tab_A[, c('ref_cov', 'alt_cov')], 1, min)
 snp_tab_X$cov_minor <- apply(snp_tab_X[, c('ref_cov', 'alt_cov')], 1, min)
 
 ref_A_snps <- snp_tab_A[snp_tab_A$genotype == '0/0', ]
-  informative_A_snps <- snp_tab_A[snp_tab_A$genotype == '0/1' & snp_tab_A$total_cov < 100, ]
-informative_X_snps <- snp_tab_X[snp_tab_X$genotype == '0/0' & snp_tab_X$total_cov < 100, ]
+informative_A_snps <- snp_tab_A[snp_tab_A$genotype == '0/1', ] # & snp_tab_A$total_cov < 100
+informative_X_snps <- snp_tab_X[snp_tab_X$genotype == '0/0', ] # & snp_tab_X$total_cov < 100
 
-pal <- c('black', rgb(0.8, 0.05, 0.1, 0.55), rgb(0.02, 0.45, 0.65, 0.55))
+pal <- c(rgb(0, 0, 0, 0.7), rgb(0.8, 0.05, 0.1, 0.55), rgb(0.02, 0.45, 0.65, 0.55))
+coverage_data <- list(X = informative_X_snps$total_cov, A_minor = informative_A_snps$cov_minor, A_major = informative_A_snps$total_cov - informative_A_snps$cov_minor)
+main <- paste('Coverages supporting autosomal heterozygous alleles in', ind)
 
-hist(informative_X_snps$total_cov, col = pal[1], main = paste('Coverages supporting autosomal heterozygous alleles in', ind), xlab = 'Coverage', breaks = 100, freq = F, xlim = c(0, 80), ylim = c(0, 0.05))
-hist(informative_A_snps$cov_minor, col = pal[3], add = T, breaks = 30, freq = F, border = F)
-hist(informative_A_snps$total_cov - informative_A_snps$cov_minor, col = pal[2], add = T, breaks = 30, freq = F, border = F)
+source('scripts/fixed_bin_historgram.R')
+fixed_bin_histogram(coverage_data, pal, main = main, xlab = 'Coverage', bins = 100, freq = F, xlim = c(0, 150), ylim = c(0, 0.05))
+
 if (ind == 'Afus1'){
   lines(c(37.6852, 37.6852), c(0, 1e6), lwd = 3, lty = 2)
   lines(c(57.3532, 57.3532), c(0, 1e6), lwd = 3, lty = 2)

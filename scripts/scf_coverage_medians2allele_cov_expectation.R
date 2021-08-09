@@ -1,7 +1,7 @@
 # 'data/mapped_reads/per_scf_cov_medians_Afus1.tsv'
 BH3_medians <- read.table('data/mapped_reads/per_scf_cov_medians_BH3-2.tsv', col.names = c('scf', 'cov_median'))
 
-asn_tab <- read.table('tables/chrosmome_asn.tsv', header = T)
+asn_tab <- read.table('tables/chr_assignments_Afus1.tsv', header = T)
 strlen <- max(nchar(c(asn_tab$scf, BH3_medians$scf)))
 
 names2tokens <- function(scf_name){
