@@ -1,4 +1,4 @@
-coverages <- read.table('data/mapped_reads/per_scf_cov_medians_Ocin2.tsv', col.names = c('scf', 'cov'))
+# coverages <- read.table('data/mapped_reads/per_scf_cov_medians_Ocin2.tsv', col.names = c('scf', 'cov'))
 # hist(coverages$cov[coverages$cov < 150], breaks = 150)
 # 30 - 130 is reasonable cov range
 
@@ -27,8 +27,8 @@ coverage_data <- list(X = informative_X_snps$total_cov, A_minor = informative_A_
 # plot(bin, main="" , colramp=my_colors , legend=F )
 
 figure_name = 'figures/het_autosomal_allele_supports/autosomal_and_X_variant_coverages_Ocin2.png'
-pal <- c(rgb(0, 0, 0, 0.7), rgb(0.8, 0.05, 0.1, 0.55), rgb(0.02, 0.45, 0.65, 0.55))
-cex_legend <- 0.75
+source('scripts/load_palette.R')
+cex_legend <- 0.95
 xlim <- c(0, 100)
 # expectation <- c(19.47, 19.47)
 main <- ''# paste('Coverages supporting autosomal heterozygous alleles in', ind)
@@ -42,7 +42,7 @@ par(mar = c(4, 4, 1, 1) + 0.1)
 fixed_bin_histogram(coverage_data, pal, main = main, xlab = 'Coverage support', xlim = xlim, bins = 50, freq = F, default_legend = F)
 
 # lines(expectation, c(0, 1e6), lwd = 3, lty = 2)
-legend('topright', pch = 20, col = pal, c('X chromosome alleles', 'A minor alleles', 'A major alleles'), bty = 'n', cex = cex_legend)
+# legend('topright', pch = 20, col = pal, c('X chromosome alleles', 'A minor alleles', 'A major alleles'), bty = 'n', cex = cex_legend)
 
 dev.off()
 

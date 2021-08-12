@@ -25,6 +25,7 @@ informative_X_snps <- snp_tab[snp_tab$chr == 'X' & snp_tab$genotype == '0/1', ]
 # X = informative_X_snps$total_cov,
 coverage_data <- list(A_minor = informative_A_snps$cov_minor, A_major = informative_A_snps$total_cov - informative_A_snps$cov_minor)
 pal <- c(rgb(0.8, 0.05, 0.1, 0.55), rgb(0.02, 0.45, 0.65, 0.55)) #rgb(0, 0, 0, 0.7),
+# source('scripts/load_palette.R')
 
 main <- ''# paste('Coverages supporting autosomal heterozygous alleles in', ind)
 cex_legend <- 0.75

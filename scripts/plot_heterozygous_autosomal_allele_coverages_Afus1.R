@@ -63,16 +63,18 @@ ref_A_snps <- snp_tab_A[snp_tab_A$genotype == '0/0', ]
 informative_A_snps <- snp_tab_A[snp_tab_A$genotype == '0/1', ] # & snp_tab_A$total_cov < 100
 informative_X_snps <- snp_tab_X[snp_tab_X$genotype == '0/0', ] # & snp_tab_X$total_cov < 100
 
-pal <- c(rgb(0, 0, 0, 0.7), rgb(0.8, 0.05, 0.1, 0.55), rgb(0.02, 0.45, 0.65, 0.55))
+source('scripts/load_palette.R')
 coverage_data <- list(X = informative_X_snps$total_cov, A_minor = informative_A_snps$cov_minor, A_major = informative_A_snps$total_cov - informative_A_snps$cov_minor)
 main <- paste('Coverages supporting autosomal heterozygous alleles in', ind)
+
+par(mar = c(4, 4, 1, 1) + 0.1)
 
 source('scripts/fixed_bin_historgram.R')
 fixed_bin_histogram(coverage_data, pal, main = main, xlab = 'Coverage', bins = 100, freq = F, xlim = c(0, 150), ylim = c(0, 0.05))
 
 if (ind == 'Afus1'){
-  lines(c(37.6852, 37.6852), c(0, 1e6), lwd = 3, lty = 2)
-  lines(c(57.3532, 57.3532), c(0, 1e6), lwd = 3, lty = 2)
+  lines(c(37.6852, 37.6852), c(0, 1e6), lwd = 2, lty = 2)
+  lines(c(57.3532, 57.3532), c(0, 1e6), lwd = 2, lty = 2)
 }
 
 legend('topright', pch = 20, col = pal, c('X chromosome allele', 'minor (paternal) allele', 'major (maternal) allele'), bty = 'n')
