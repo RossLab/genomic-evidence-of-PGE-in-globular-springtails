@@ -1,7 +1,9 @@
 ### Stuart's alternative plan
 
 ```
-qsub -o logs -e logs -cwd -N bam2sync -V -pe smp64 8 -b yes 'samtools mpileup -a --no-BAQ --fasta-ref data/reference/Afus1/genome.fa --output /scratch/$USER/Afus1.mpileup data/mapped_reads/Afus1.rg.sorted.rmdup.bam && java -jar --input ~/src/popoolation2/mpileup2sync.jar /scratch/$USER/Afus1.mpileup --threads 16 --output /scratch/$USER/Afus1.sync && rsync -av --remove-source-files /scratch/$USER/Afus1.sync data/sync_files/'
+qsub -o logs -e logs -cwd -N bam2sync -V -pe smp64 16 -b yes 'samtools mpileup -a --no-BAQ --fasta-ref data/reference/Afus1/genome.fa --output /scratch/$USER/Afus1.mpileup data/mapped_reads/Afus1.rg.sorted.rmdup.bam && java -jar ~/src/popoolation2/mpileup2sync.jar --input /scratch/$USER/Afus1.mpileup --threads 16 --output /scratch/$USER/Afus1.sync && rsync -av --remove-source-files /scratch/$USER/Afus1.sync data/sync_files/'
+
+qsub -o logs -e logs -cwd -N bam2sync -V -pe smp64 16 -b yes 'samtools mpileup -a --no-BAQ --fasta-ref data/reference/Afus1/genome.fa --output /scratch/$USER/BH3-2.mpileup data/mapped_reads/BH3-2.rg.sorted.rmdup.bam && java -jar ~/src/popoolation2/mpileup2sync.jar --input /scratch/$USER/BH3-2.mpileup --threads 16 --output /scratch/$USER/BH3-2.sync && rsync -av --remove-source-files /scratch/$USER/BH3-2.sync data/sync_files/'
 ```
 
 I gave the sync file to Stuart and he made some magic with it that resulted in a strange figure supporting 0.09 as the number. Not super sure what the number is (if difference in covrage supports, or ratio?). Anyway, to understand better what we are dealing with I decided to explore the sync file (`data/sync_files/Afus1.sync.gz`) or even the raw pileup files stored on `biggar`.

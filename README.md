@@ -246,3 +246,20 @@ Coverage plots:
         genomescope.R -i $dir/kmer_k21_full.hist -o $dir -n $SAMPLE;
       done
     ```
+
+  mapping:
+    Afus1:
+     - `data/mapped_reads/Afus1_cov_per_scf.tsv`
+
+    BH3-2:
+     - `data/mapped_reads/BH3-2_cov_per_scf.tsv`
+
+    Ocin2:
+     - `data/mapped_reads/Ocin2_cov_per_scf.tsv`
+
+
+    ```
+      Rscript scripts/plot_mapping_coverages.R
+    ```
+
+    plots them all (`figures/mapping_coverages/*`).
