@@ -1,8 +1,8 @@
 library('reldist')
 
-#########
-# MEANS #
-#########
+##################3
+# JOIN PLOT MEANS #
+##################3
 
 cov_tab <- read.table("tables/Afus_mean_coverage_table.tsv", header = T, check.names = F)
 
@@ -68,63 +68,112 @@ suffix <- '_coverage_plot.png'
 ind <- 'BH3-2'
 figurename <- paste0(prefix, ind, suffix)
 
-get_peak <- function(ks){
+get_peak <- function(ks, which_peak = 1){
   second_deriv <- diff(sign(diff(ks$y)))
 
   peak_covs <- ks$x[which(second_deriv == -2) + 1]
   peak_heights <- ks$y[which(second_deriv == -2) + 1]
-  peak_covs[which.max(peak_heights)]
+  peak_covs[order(peak_heights, decreasing=T)][which_peak]
 }
 
-png(figurename)
-
-  filt_quantile <- wtd.quantile(cov_tab[, ind], 0.95, weight = cov_tab[, 'len'])
-  ind_tab <- cov_tab[cov_tab[, ind] < filt_quantile & cov_tab[, 'len'] > 20000, c('scf', 'len', ind)]
-  ind_tab <- ind_tab[!is.na(ind_tab[, ind]), ]
+filt_quantile <- wtd.quantile(cov_tab[, ind], 0.95, weight = cov_tab[, 'len'])
+ind_tab <- cov_tab[cov_tab[, ind] < filt_quantile & cov_tab[, 'len'] > 20000, c('scf', 'len', ind)]
+ind_tab <- ind_tab[!is.na(ind_tab[, ind]), ]
 #
 
-  adjust = 1
-  scf_ks <- density(ind_tab[, ind], bw = "nrd0", adjust = adjust, weights = ind_tab$len / sum(ind_tab$len))
-  second_deriv <- diff(sign(diff(scf_ks$y)))
+adjust = 1
+scf_ks <- density(ind_tab[, ind], bw = "nrd0", adjust = adjust, weights = ind_tab$len / sum(ind_tab$len))
+second_deriv <- diff(sign(diff(scf_ks$y)))
 
-  peak_covs <- scf_ks$x[which(second_deriv == -2) + 1]
-  peak_heights <- scf_ks$y[which(second_deriv == -2) + 1]
+peak_covs <- scf_ks$x[which(second_deriv == -2) + 1]
+peak_heights <- scf_ks$y[which(second_deriv == -2) + 1]
 
-  est_1 <- peak_covs[which.max(peak_heights)]
-  est_2 <- peak_covs[peak_heights!=max(peak_heights)][which.max( peak_heights[peak_heights!=max(peak_heights)] )]
-  if (est_1 > est_2){
-      coverage_est_tab[ind, 'haploid'] <- est_2
-      coverage_est_tab[ind, 'diploid'] <- est_1
-  } else {
-      coverage_est_tab[ind, 'haploid'] <- est_1
-      coverage_est_tab[ind, 'diploid'] <- est_2
-  }
+est_1 <- peak_covs[which.max(peak_heights)]
+est_2 <- peak_covs[peak_heights!=max(peak_heights)][which.max( peak_heights[peak_heights!=max(peak_heights)] )]
+if (est_1 > est_2){
+    coverage_est_tab[ind, 'haploid'] <- est_2
+    coverage_est_tab[ind, 'diploid'] <- est_1
+} else {
+    coverage_est_tab[ind, 'haploid'] <- est_1
+    coverage_est_tab[ind, 'diploid'] <- est_2
+}
 
-	plot(scf_ks, main = ind)
+png(figurename, units="in", width=5, height=5, res=300)
 
-  if ( ind %in% c('Afus1', 'BH3-2')){
-    lines(c(coverage_est_tab[ind, 'haploid'], coverage_est_tab[ind, 'haploid']), c(0, 1000), lty = 2)
-    lines(c(coverage_est_tab[ind, 'diploid'], coverage_est_tab[ind, 'diploid']), c(0, 1000), lty = 2)
-    text(0, 0.04, round(coverage_est_tab[ind, 'diploid'] - coverage_est_tab[ind, 'haploid'], 2))
-    text(0, 0.05, round(coverage_est_tab[ind, 'haploid'], 2))
-  }
+  par(mar = c(4, 4, 1, 1) + 0.1)
+	plot(scf_ks, main = '', xlab = 'Mean scaffold coverage', lwd = 2)
+
+  lines(c(coverage_est_tab[ind, 'haploid'], coverage_est_tab[ind, 'haploid']), c(0, 1000), lty = 2, lwd = 2)
+  lines(c(coverage_est_tab[ind, 'diploid'], coverage_est_tab[ind, 'diploid']), c(0, 1000), lty = 2, lwd = 2)
+  # mtext(paste0(round(coverage_est_tab[ind, 'haploid'], 1),'x'), 3, padj = 2, at = coverage_est_tab[ind, 'haploid'] + 5, cex = 1)
+  # mtext(paste0(round(coverage_est_tab[ind, 'diploid'], 1),'x'), 3, padj = 2, at = coverage_est_tab[ind, 'diploid'] + 5, cex = 1)
 
 
 dev.off()
 
+ind = 'Afus1'
+figurename <- paste0(prefix, ind, suffix)
 
-###########
-# MEDIANS #
-###########
+filt_quantile <- wtd.quantile(cov_tab[, ind], 0.95, weight = cov_tab[, 'len'])
+ind_tab <- cov_tab[cov_tab[, ind] < filt_quantile & cov_tab[, 'len'] > 20000, c('scf', 'len', ind)]
 
-median_cov_tab <- read.table("tables/Afus_median_coverage_table.tsv", header = T, check.names = F)
-strlen <- max(nchar(c(cov_tab$scf, median_cov_tab$scf)))
+adjust = 1
+scf_ks <- density(ind_tab[, ind], bw = "nrd0", adjust = adjust, weights = ind_tab$len / sum(ind_tab$len))
 
-names2tokens <- function(scf_name){
-  sapply(strsplit(scf_name, '_'), function(x){ added_0s <- (strlen - (1 + sum(nchar(x)))); paste0(x[1], paste0(rep('0', added_0s), collapse = ''), x[2]) } )
-}
+png(figurename, units="in", width=5, height=5, res=300)
 
-rownames(median_cov_tab) <- names2tokens(median_cov_tab$scf)
-median_cov_tab_reduced <- median_cov_tab[names2tokens(cov_tab$scf), ]
+  par(mar = c(4, 4, 1, 1) + 0.1)
+	plot(scf_ks, main = '', xlab = 'Mean scaffold coverage', lwd = 2)
 
-cov_tab <- median_cov_tab_reduced
+  lines(c(coverage_est_tab[ind, 'haploid'], coverage_est_tab[ind, 'haploid']), c(0, 1000), lty = 2, lwd = 2)
+  lines(c(coverage_est_tab[ind, 'diploid'], coverage_est_tab[ind, 'diploid']), c(0, 1000), lty = 2, lwd = 2)
+
+dev.off()
+
+
+# ###########
+# # MEDIANS #
+# ###########
+#
+# median_cov_tab <- read.table("tables/Afus_median_coverage_table.tsv", header = T, check.names = F)
+# strlen <- max(nchar(c(cov_tab$scf, median_cov_tab$scf)))
+#
+# names2tokens <- function(scf_name){
+#   sapply(strsplit(scf_name, '_'), function(x){ added_0s <- (strlen - (1 + sum(nchar(x)))); paste0(x[1], paste0(rep('0', added_0s), collapse = ''), x[2]) } )
+# }
+#
+# rownames(median_cov_tab) <- names2tokens(median_cov_tab$scf)
+# median_cov_tab_reduced <- median_cov_tab[names2tokens(cov_tab$scf), ]
+#
+# cov_tab <- median_cov_tab_reduced
+
+
+#########
+# Ocin2 #
+#########
+
+# this table also contain Ocin2 coverages in "male_coverage" column
+asn_tab <- read.table('tables/chr_assignments_Ocin1.tsv', header = T)
+
+ind = 'Ocin2'
+figurename <- paste0(prefix, ind, suffix)
+
+filt_quantile <- wtd.quantile(asn_tab[, 'male_coverage'], 0.95, weight = asn_tab[, 'len'])
+ind_tab <- asn_tab[asn_tab[, 'male_coverage'] < filt_quantile & asn_tab[, 'len'] > 20000, c('scf', 'len', 'male_coverage')]
+
+adjust = 1
+scf_ks <- density(ind_tab[, 'male_coverage'], bw = "nrd0", adjust = adjust, weights = ind_tab$len / sum(ind_tab$len))
+cov_2n <- get_peak(scf_ks)
+# [1] 101.1228
+cov_1n <- get_peak(scf_ks, 2)
+# [1] 53.4376
+
+png(figurename, units="in", width=5, height=5, res=300)
+
+  par(mar = c(4, 4, 1, 1) + 0.1)
+	plot(scf_ks, main = '', xlab = 'Mean scaffold coverage', lwd = 2, xlim = c(0, 150))
+
+  lines(c(cov_1n, cov_1n), c(0, 1000), lty = 2, lwd = 2)
+  lines(c(cov_2n, cov_2n), c(0, 1000), lty = 2, lwd = 2)
+
+dev.off()

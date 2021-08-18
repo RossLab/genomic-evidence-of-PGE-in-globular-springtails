@@ -16,37 +16,42 @@ zcat data/sync_files/Afus1.sync.gz | scripts/sync2variable_sites.py > data/sync_
 
 
 ```R
-variant_sites <- read.table("data/sync_files/variant_sites.tsv")
+variant_sites <- read.table("data/sync_files/BH3-2_variant_sites.tsv") #variant_sites.tsv
 colnames(variant_sites) <- c('scf', 'pos', 'major_cov', 'minor_cov')
 
 variant_sites$cov_ratio <- variant_sites$minor_cov / (variant_sites$minor_cov + variant_sites$major_cov)
+likely_SNPs <- variant_sites[variant_sites$major_cov < 50 & variant_sites$minor_cov > 1,]
 
-hist(variant_sites$cov_ratio)
+hist(likely_SNPs$cov_ratio)
+
 # only the error variants are properly visible, probably better somehow cleared. Ideas:
 #  - min minor cov
 #  - min total cov
 #  - only assigned scf
 
 asn_tab <- read.table('tables/chr_assignments_Afus1.tsv', header = T)
-strlen <- max(nchar(c(asn_tab$scf, variant_sites$scf)))
+strlen <- max(nchar(c(asn_tab$scf, likely_SNPs$scf)))
 
 names2tokens <- function(scf_name){
   sapply(strsplit(scf_name, '_'), function(x){ added_0s <- (strlen - (1 + sum(nchar(x)))); paste0(x[1], paste0(rep('0', added_0s), collapse = ''), x[2]) } )
 }
 
 rownames(asn_tab) <- names2tokens(asn_tab$scf)
-variant_sites$chr <- asn_tab[names2tokens(variant_sites$scf), 'chr']
-variant_sites$len <- asn_tab[names2tokens(variant_sites$scf), 'len']
+likely_SNPs$chr <- asn_tab[names2tokens(likely_SNPs$scf), 'chr']
+likely_SNPs$len <- asn_tab[names2tokens(likely_SNPs$scf), 'len']
+likely_SNPs$total_cov <- likely_SNPs$major_cov + likely_SNPs$minor_cov
 
-assigned_vars <- variant_sites[!is.na(variant_sites$chr), ]
-assigned_vars$total_cov <- assigned_vars$major_cov + assigned_vars$minor_cov
+assigned_SNPs <- likely_SNPs[!is.na(likely_SNPs$chr) & likely_SNPs$total_cov < 50  & likely_SNPs$minor_cov > 5 & likely_SNPs$chr == 'A', ]
 
-hist(assigned_vars$total_cov[assigned_vars$total_cov < 140,])
-hist(assigned_vars$total_cov[assigned_vars$total_cov < 140 & assigned_vars$chr == 'X'], add = T, col = 'red')
-hist(assigned_vars$total_cov[assigned_vars$total_cov < 140 & assigned_vars$chr == 'A'], add = T, col = 'blue')
 
-X_variants <- assigned_vars[assigned_vars$total_cov < 140 & assigned_vars$chr == 'X', ]
-A_variants <- assigned_vars[assigned_vars$total_cov < 140 & assigned_vars$chr == 'A', ]
+source('scripts/load_palette.R')
+source('scripts/fixed_bin_historgram.R')
+
+fixed_bin_histogram(list(assigned_SNPs$major_cov[assigned_SNPs$chr == 'A'], assigned_SNPs$minor_cov[assigned_SNPs$chr == 'A']), pal[-1], xlab = 'Coverage support', bins = 50, freq = F, xlim = c(0, 50), default_legend = F)
+
+
+X_variants <- assigned_SNPs[assigned_SNPs$total_cov < 140 & assigned_SNPs$chr == 'X', ]
+A_variants <- assigned_SNPs[assigned_SNPs$total_cov < 140 & assigned_SNPs$chr == 'A', ]
 
 hist(X_variants$cov_ratio[X_variants$minor_cov > 5])
 hist(A_variants$cov_ratio[A_variants$minor_cov > 5])
