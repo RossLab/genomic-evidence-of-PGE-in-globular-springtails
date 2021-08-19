@@ -1,5 +1,13 @@
 library('reldist')
 
+get_peak <- function(ks, which_peak = 1){
+  second_deriv <- diff(sign(diff(ks$y)))
+
+  peak_covs <- ks$x[which(second_deriv == -2) + 1]
+  peak_heights <- ks$y[which(second_deriv == -2) + 1]
+  peak_covs[order(peak_heights, decreasing=T)][which_peak]
+}
+
 ##################3
 # JOIN PLOT MEANS #
 ##################3
@@ -68,14 +76,6 @@ suffix <- '_coverage_plot.png'
 ind <- 'BH3-2'
 figurename <- paste0(prefix, ind, suffix)
 
-get_peak <- function(ks, which_peak = 1){
-  second_deriv <- diff(sign(diff(ks$y)))
-
-  peak_covs <- ks$x[which(second_deriv == -2) + 1]
-  peak_heights <- ks$y[which(second_deriv == -2) + 1]
-  peak_covs[order(peak_heights, decreasing=T)][which_peak]
-}
-
 filt_quantile <- wtd.quantile(cov_tab[, ind], 0.95, weight = cov_tab[, 'len'])
 ind_tab <- cov_tab[cov_tab[, ind] < filt_quantile & cov_tab[, 'len'] > 20000, c('scf', 'len', ind)]
 ind_tab <- ind_tab[!is.na(ind_tab[, ind]), ]
@@ -98,10 +98,10 @@ if (est_1 > est_2){
     coverage_est_tab[ind, 'diploid'] <- est_2
 }
 
-png(figurename, units="in", width=5, height=5, res=300)
+png(figurename, units="in", width=5, height=4, res=300)
 
   par(mar = c(4, 4, 1, 1) + 0.1)
-	plot(scf_ks, main = '', xlab = 'Mean scaffold coverage', lwd = 2)
+	plot(scf_ks, main = '', xlab = 'Mean scaffold coverage', lwd = 2, xlim = c(0, 60))
 
   lines(c(coverage_est_tab[ind, 'haploid'], coverage_est_tab[ind, 'haploid']), c(0, 1000), lty = 2, lwd = 2)
   lines(c(coverage_est_tab[ind, 'diploid'], coverage_est_tab[ind, 'diploid']), c(0, 1000), lty = 2, lwd = 2)
@@ -120,7 +120,7 @@ ind_tab <- cov_tab[cov_tab[, ind] < filt_quantile & cov_tab[, 'len'] > 20000, c(
 adjust = 1
 scf_ks <- density(ind_tab[, ind], bw = "nrd0", adjust = adjust, weights = ind_tab$len / sum(ind_tab$len))
 
-png(figurename, units="in", width=5, height=5, res=300)
+png(figurename, units="in", width=5, height=4, res=300)
 
   par(mar = c(4, 4, 1, 1) + 0.1)
 	plot(scf_ks, main = '', xlab = 'Mean scaffold coverage', lwd = 2)
@@ -168,7 +168,7 @@ cov_2n <- get_peak(scf_ks)
 cov_1n <- get_peak(scf_ks, 2)
 # [1] 53.4376
 
-png(figurename, units="in", width=5, height=5, res=300)
+png(figurename, units="in", width=5, height=4, res=300)
 
   par(mar = c(4, 4, 1, 1) + 0.1)
 	plot(scf_ks, main = '', xlab = 'Mean scaffold coverage', lwd = 2, xlim = c(0, 150))
