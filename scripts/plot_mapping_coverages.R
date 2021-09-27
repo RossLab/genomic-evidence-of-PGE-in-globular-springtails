@@ -1,4 +1,4 @@
-library('reldist')
+library('weights')
 
 get_peak <- function(ks, which_peak = 1){
   second_deriv <- diff(sign(diff(ks$y)))
@@ -24,17 +24,11 @@ pdf('figures/Allacma_cov_estimates.pdf', width = 8, height = 6)
 par(mfrow = c(3, 5))
 
 for (ind in coverage_est_tab$ind){
-  filt_quantile <- wtd.quantile(cov_tab[, ind], 0.95, weight = cov_tab[, 'len'])
+  filt_quantile <- wtd.quantile(cov_tab[, ind], 0.98, weight = cov_tab[, 'len'])
   ind_tab <- cov_tab[cov_tab[, ind] < filt_quantile & cov_tab[, 'len'] > 20000, c('scf', 'len', ind)]
   ind_tab <- ind_tab[!is.na(ind_tab[, ind]), ]
 
-  if ( ind %in% c('Afus1', 'BH3-2')){
-    adjust = 1.5
-  } else {
-    adjust = 3
-  }
-
-  scf_ks <- density(ind_tab[, ind], bw = "nrd0", adjust = adjust, weights = ind_tab$len / sum(ind_tab$len))
+  scf_ks <- density(ind_tab[, ind], bw = "SJ", adjust = 1, weights = ind_tab$len / sum(ind_tab$len))
   second_deriv <- diff(sign(diff(scf_ks$y)))
 
   peak_covs <- scf_ks$x[which(second_deriv == -2) + 1]
@@ -76,13 +70,13 @@ suffix <- '_coverage_plot.png'
 ind <- 'BH3-2'
 figurename <- paste0(prefix, ind, suffix)
 
-filt_quantile <- wtd.quantile(cov_tab[, ind], 0.95, weight = cov_tab[, 'len'])
+filt_quantile <- wtd.quantile(cov_tab[, ind], 0.98, weight = cov_tab[, 'len'])
 ind_tab <- cov_tab[cov_tab[, ind] < filt_quantile & cov_tab[, 'len'] > 20000, c('scf', 'len', ind)]
 ind_tab <- ind_tab[!is.na(ind_tab[, ind]), ]
 #
 
 adjust = 1
-scf_ks <- density(ind_tab[, ind], bw = "nrd0", adjust = adjust, weights = ind_tab$len / sum(ind_tab$len))
+scf_ks <- density(ind_tab[, ind], bw = "SJ", adjust = adjust, weights = ind_tab$len / sum(ind_tab$len))
 second_deriv <- diff(sign(diff(scf_ks$y)))
 
 peak_covs <- scf_ks$x[which(second_deriv == -2) + 1]
@@ -98,10 +92,18 @@ if (est_1 > est_2){
     coverage_est_tab[ind, 'diploid'] <- est_2
 }
 
-png(figurename, units="in", width=5, height=4, res=300)
+png(figurename, units="in", width=5, height=5, res=300)
 
   par(mar = c(4, 4, 1, 1) + 0.1)
-	plot(scf_ks, main = '', xlab = 'Mean scaffold coverage', lwd = 2, xlim = c(0, 60))
+
+  subset <- ind_tab[, ind] < 60
+  wtd.hist(ind_tab[subset, ind], breaks = 60,
+       freq = F, weight = ind_tab[subset, 'len'],
+       col = 'grey', border = NA,
+       main = '',
+       xlim = c(0, 60), ylim = c(0, 0.30),
+       xlab = 'Mean scaffold coverage')
+	lines(scf_ks, lwd = 2)
 
   lines(c(coverage_est_tab[ind, 'haploid'], coverage_est_tab[ind, 'haploid']), c(0, 1000), lty = 2, lwd = 2)
   lines(c(coverage_est_tab[ind, 'diploid'], coverage_est_tab[ind, 'diploid']), c(0, 1000), lty = 2, lwd = 2)
@@ -114,16 +116,24 @@ dev.off()
 ind = 'Afus1'
 figurename <- paste0(prefix, ind, suffix)
 
-filt_quantile <- wtd.quantile(cov_tab[, ind], 0.95, weight = cov_tab[, 'len'])
+filt_quantile <- wtd.quantile(cov_tab[, ind], 0.98, weight = cov_tab[, 'len'])
 ind_tab <- cov_tab[cov_tab[, ind] < filt_quantile & cov_tab[, 'len'] > 20000, c('scf', 'len', ind)]
 
 adjust = 1
-scf_ks <- density(ind_tab[, ind], bw = "nrd0", adjust = adjust, weights = ind_tab$len / sum(ind_tab$len))
+scf_ks <- density(ind_tab[, ind], bw = "SJ", adjust = adjust, weights = ind_tab$len / sum(ind_tab$len))
 
 png(figurename, units="in", width=5, height=4, res=300)
 
   par(mar = c(4, 4, 1, 1) + 0.1)
-	plot(scf_ks, main = '', xlab = 'Mean scaffold coverage', lwd = 2)
+
+  subset <- ind_tab[, ind] < filt_quantile
+  wtd.hist(ind_tab[subset, ind], breaks = 60,
+       freq = F, weight = ind_tab[subset, 'len'],
+       col = 'grey', border = NA,
+       main = '',
+       xlim = c(0, 140), ylim = c(0, 0.20),
+       xlab = 'Mean scaffold coverage')
+	lines(scf_ks, lwd = 2)
 
   lines(c(coverage_est_tab[ind, 'haploid'], coverage_est_tab[ind, 'haploid']), c(0, 1000), lty = 2, lwd = 2)
   lines(c(coverage_est_tab[ind, 'diploid'], coverage_est_tab[ind, 'diploid']), c(0, 1000), lty = 2, lwd = 2)
@@ -158,7 +168,7 @@ asn_tab <- read.table('tables/chr_assignments_Ocin1.tsv', header = T)
 ind = 'Ocin2'
 figurename <- paste0(prefix, ind, suffix)
 
-filt_quantile <- wtd.quantile(asn_tab[, 'male_coverage'], 0.95, weight = asn_tab[, 'len'])
+filt_quantile <- wtd.quantile(asn_tab[, 'male_coverage'], 0.98, weight = asn_tab[, 'len'])
 ind_tab <- asn_tab[asn_tab[, 'male_coverage'] < filt_quantile & asn_tab[, 'len'] > 20000, c('scf', 'len', 'male_coverage')]
 
 adjust = 1
@@ -171,7 +181,16 @@ cov_1n <- get_peak(scf_ks, 2)
 png(figurename, units="in", width=5, height=4, res=300)
 
   par(mar = c(4, 4, 1, 1) + 0.1)
-	plot(scf_ks, main = '', xlab = 'Mean scaffold coverage', lwd = 2, xlim = c(0, 150))
+
+  subset <- ind_tab[, 'male_coverage'] < filt_quantile
+  wtd.hist(ind_tab[subset, 'male_coverage'], breaks = 60,
+       freq = F, weight = ind_tab[subset, 'len'],
+       col = 'grey', border = NA,
+       main = '',
+       xlim = c(0, 150), ylim = c(0, 0.05),
+       xlab = 'Mean scaffold coverage')
+  lines(scf_ks, lwd = 2)
+
 
   lines(c(cov_1n, cov_1n), c(0, 1000), lty = 2, lwd = 2)
   lines(c(cov_2n, cov_2n), c(0, 1000), lty = 2, lwd = 2)

@@ -21,6 +21,7 @@ legend('topright', pch = 20, col = pal, c('X-linked homozygous', 'minor autosoma
 
 dev.off()
 
+# ADD HERE O CINCTA COV EST
 allele_1 <- rnbinom(200000, size = 15, mu = 10)
 allele_2 <- rnbinom(200000, size = 15, mu = 19)
 

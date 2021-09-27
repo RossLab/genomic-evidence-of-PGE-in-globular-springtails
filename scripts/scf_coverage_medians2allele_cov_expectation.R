@@ -1,46 +1,60 @@
-# 'data/mapped_reads/per_scf_cov_medians_Afus1.tsv'
-BH3_medians <- read.table('data/mapped_reads/per_scf_cov_medians_BH3-2.tsv', col.names = c('scf', 'cov_median'))
+library('reldist')
 
-asn_tab <- read.table('tables/chr_assignments_Afus1.tsv', header = T)
-strlen <- max(nchar(c(asn_tab$scf, BH3_medians$scf)))
+########
+# FUNCIONS
+#######
 
-names2tokens <- function(scf_name){
-  sapply(strsplit(scf_name, '_'), function(x){ added_0s <- (strlen - (1 + sum(nchar(x)))); paste0(x[1], paste0(rep('0', added_0s), collapse = ''), x[2]) } )
+get_peak <- function(ks, which_peak = 1){
+  second_deriv <- diff(sign(diff(ks$y)))
+
+  peak_covs <- ks$x[which(second_deriv == -2) + 1]
+  peak_heights <- ks$y[which(second_deriv == -2) + 1]
+  peak_covs[order(peak_heights, decreasing=T)][which_peak]
 }
 
-rownames(asn_tab) <- names2tokens(asn_tab$scf)
-BH3_medians$chr <- asn_tab[names2tokens(BH3_medians$scf), 'chr']
-BH3_medians$len <- asn_tab[names2tokens(BH3_medians$scf), 'len']
+smoothing_ests <- function(cov_tab, ind, bw_technique, adjust){
+  filt_quantile <- wtd.quantile(cov_tab[, ind], 0.98, weight = cov_tab[, 'len'])
+  ind_tab <- cov_tab[cov_tab[, ind] < filt_quantile & cov_tab[, 'len'] > 20000, c('scf', 'len', ind)]
+  ind_tab <- ind_tab[!is.na(ind_tab[, ind]), ]
 
-BH3_medians <- BH3_medians[BH3_medians$cov_median < 60, ]
-BH3_assigned_medians <- BH3_medians[!is.na(BH3_medians$chr), ]
+  scf_ks <- density(ind_tab[, ind], bw = bw_technique, adjust = adjust, weights = ind_tab[, 'len'] / sum(ind_tab[, 'len']))
+  est_1 <- get_peak(scf_ks, 1)
+  est_2 <- get_peak(scf_ks, 2)
+  fraction_of_sperm(est_1, est_2)
+  c(est_2 - est_1, est_1, est_2, fraction_of_sperm(est_1, est_2), scf_ks$bw)
+}
 
-autosomes <- BH3_assigned_medians$chr == 'A'
-sex_chr <- BH3_assigned_medians$chr == 'X'
+fraction_of_sperm <- function(X_cov, A_cov){ return( ((2 * X_cov) - A_cov) / X_cov  ) }
 
-# plot(BH3_assigned_medians$len ~ BH3_assigned_medians$cov_median, pch = 20)
-# points(BH3_assigned_medians$len[autosomes] ~ BH3_assigned_medians$cov_median[autosomes], col = 'yellow')
-# points(BH3_assigned_medians$len[sex_chr] ~ BH3_assigned_medians$cov_median[sex_chr], col = 'green')
+########
+# MEANS
+########
+cov_means <- read.table('tables/Afus_mean_coverage_table.tsv', header = T, check.names = F)
+# cov_medians <- read.table('tables/Afus_median_coverage_table.tsv', header = T, check.names = F)
 
-BH3_autosome_ks <- density(BH3_assigned_medians[autosomes, 'cov_median'], bw = "nrd0", adjust = 2.5, weights = BH3_assigned_medians$len[autosomes] / sum(BH3_assigned_medians$len[autosomes]))
-second_deriv <- diff(sign(diff(BH3_autosome_ks$y)))
+smoothing_ests('BH3-2', 'SJ', 1)
+# [1] 18.3265818 29.6746452  0.3807867
+smoothing_ests('Afus1', 'SJ', 1)
+# [1] 57.7197160 95.1939575  0.3507549
 
-peak_covs <- BH3_autosome_ks$x[which(second_deriv == -2) + 1]
-peak_heights <- BH3_autosome_ks$y[which(second_deriv == -2) + 1]
+# testing stuff
+# coverages <- ind_tab[, ind]
+# scf_lengths <- ind_tab$len
+# bw_technique <- 'SJ'
+# adjust <- 1
+#
+# scf_ks <- density(coverages, bw = bw_technique, adjust = adjust, weights = scf_lengths / sum(scf_lengths))
+# est_1 <- get_peak(scf_ks, 1)
+# est_2 <- get_peak(scf_ks, 2)
+# fraction_of_sperm(est_1, est_2)
+# c(est_2 - est_1, est_1, est_2, fraction_of_sperm(est_1, est_2))
 
-peak_covs
-peak_heights
-diploid = 29.49488
+smoothing_ests(cov_means, 'BH3-2', 'SJ', 1)
+# [1] 11.3033301 18.3541031 29.6574332  0.3841524  0.3058355
+smoothing_ests(cov_medians, 'BH3-2', 'SJ', 1)
+# [1] 10.97215804 18.01934702 28.99150505  0.39109014  0.04797985
 
-
-BH3_sex_ks <- density(BH3_assigned_medians[sex_chr, 'cov_median'], bw = "nrd0", adjust = 3, weights = BH3_assigned_medians$len[sex_chr] / sum(BH3_assigned_medians$len[sex_chr]))
-second_deriv <- diff(sign(diff(BH3_autosome_ks$y)))
-
-peak_covs <- BH3_sex_ks$x[which(second_deriv == -2) + 1]
-peak_heights <- BH3_sex_ks$y[which(second_deriv == -2) + 1]
-
-peak_covs
-peak_heights
-haploid = 19.467778
-
-diploid - haploid
+smoothing_ests(cov_means, 'Afus1', 'SJ', 1)
+# [1] 37.4459078 57.7044404 95.1503482  0.3510741  0.5062469
+smoothing_ests(cov_medians, 'Afus1', 'SJ', 1)
+# [1] 37.900072 57.015051 94.915122  0.335262  0.424832

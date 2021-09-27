@@ -40,10 +40,5 @@ png(figure_name, units="in", width=5, height=5, res=300)
   # 'c(bottom, left, top, right)'
   par(mar = c(4, 4, 1, 1) + 0.1)
   fixed_bin_histogram(coverage_data, pal, main = main, xlab = 'Coverage support', bins = 50, freq = F, default_legend = F, xlim = xlim) # ylim = ylim,
-  if (ind == 'BH3-2'){
-    lines(c(10.03, 10.03), c(0, 1e6), lwd = 3, lty = 2)
-    lines(c(19.47, 19.47), c(0, 1e6), lwd = 3, lty = 2)
-  }
-
   legend('topright', pch = 20, col = pal, c('minor allele', 'major allele'), bty = 'n', cex = cex_legend)
 dev.off()
