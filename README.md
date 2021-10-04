@@ -2,6 +2,8 @@
 
 This is a supplementary material. It allows, nearly perfect, replication of the study and exact code that was used to generate all the results and figures.
 
+You can also check [ESEB talk about preliminary results of this work](https://www.youtube.com/watch?v=LKBG5AqkUqg&t=5363s).
+
 ### Springtails collected and sequenced
 
 The sequenced materials resequencing data: PRJEB44694
@@ -92,36 +94,43 @@ Calculation of expectation of allele coverages under different scenarios
 
 ### variant calling
 
+We call variants using freebayes.
+
+```
+# A. fusca
+freebayes -f data/reference/Afus1/genome.fa -b data/mapped_reads/Afus1.rg.sorted.rmdup.bam data/mapped_reads/BH3-2.rg.sorted.rmdup.bam  data/mapped_reads/WW2-1.rg.sorted.rmdup.bam  data/mapped_reads/WW3-1.rg.sorted.rmdup.bam  data/mapped_reads/WW5-4.rg.sorted.rmdup.bam data/mapped_reads/WW1-2.rg.sorted.rmdup.bam  data/mapped_reads/WW2-5.rg.sorted.rmdup.bam  data/mapped_reads/WW5-1.rg.sorted.rmdup.bam  data/mapped_reads/WW5-5.rg.sorted.rmdup.bam data/mapped_reads/WW1-4.rg.sorted.rmdup.bam  data/mapped_reads/WW2-6.rg.sorted.rmdup.bam  data/mapped_reads/WW5-3.rg.sorted.rmdup.bam  data/mapped_reads/WW5-6.rg.sorted.rmdup.bam --populations tables/populations.tsv --hwe-priors-off --standard-filters --min-coverage 5 -p 2 > data/SNP_calls/freebayes_all_samples_raw.vcf
+
+# Ocin2
+freebayes -f data/reference/Ocin1/genome.fa -b data/mapped_reads/Ocin2.rg.sorted.bam --standard-filters --min-coverage 5 -p 2 > data/SNP_calls/freebayes_Ocin2_raw.vcf
+
+# Redoing SNP calls for Afus1
+freebayes -f data/reference/Afus1/genome.fa -b data/mapped_reads/Afus1.rg.sorted.rmdup.bam --standard-filters --min-coverage 5 -p 2 > data/SNP_calls/freebayes_Afus1_raw.vcf
+```
+
 Allele coverage distributions
 
 ```bash
-qsub -o logs -e logs -cwd -N SNP_filt -V -pe smp64 1 -b yes 'scripts/subset_SNPs_to_chromosomes.sh data/SNP_calls/freebayes_all_samples_raw.vcf tables/chr_assignments_Afus1.tsv'
-
-qsub -o logs -e logs -cwd -N SNP_filt -V -pe smp64 1 -b yes 'scripts/subset_SNPs_to_chromosomes.sh data/SNP_calls/freebayes_Ocin2_raw.vcf tables/chr_assignments_Ocin1.tsv'
-
-qsub -o logs -e logs -cwd -N SNP_filt -V -pe smp64 1 -b yes 'scripts/subset_SNPs_to_chromosomes.sh data/SNP_calls/freebayes_Afus_Afus1_raw.vcf tables/chr_assignments_Afus1.tsv'
+# qsub -o logs -e logs -cwd -N SNP_filt -V -pe smp64 1 -b yes '' -> submission on our cluster
+scripts/subset_SNPs_to_chromosomes.sh data/SNP_calls/freebayes_all_samples_raw.vcf tables/chr_assignments_Afus1.tsv
+scripts/subset_SNPs_to_chromosomes.sh data/SNP_calls/freebayes_Ocin2_raw.vcf tables/chr_assignments_Ocin1.tsv
+scripts/subset_SNPs_to_chromosomes.sh data/SNP_calls/freebayes_Afus1_raw.vcf tables/chr_assignments_Afus1.tsv
 ```
 
 ```
-scripts/sort_variants_with_respect_to_chromosomes.py -o data/SNP_calls/freebayes_Afus_filt_sorted data/SNP_calls/freebayes_Afus_filt.vcf tables/chr_assignments_Afus1.tsv
-
-scripts/sort_variants_with_respect_to_chromosomes.py -o data/SNP_calls/freebayes_Ocin2_filt_sorted data/SNP_calls/freebayes_Ocin2_filt.vcf tables/chr_assignments_Ocin1.tsv
-
-scripts/sort_variants_with_respect_to_chromosomes.py -o data/SNP_calls/freebayes_Afus1_filt_sorted_by_median data/SNP_calls/freebayes_Afus_Afus1_raw_filt.vcf tables/chr_assignments_Afus1_medians.tsv
+data/SNP_calls/freebayes_Afus_filt.vcf
+data/SNP_calls/freebayes_Afus1_raw_filt.vcf
+data/SNP_calls/freebayes_Ocin2_raw_filt.vcf
 ```
 
-### hypothesis testing
+#### sorting variants to chromosomes
 
 ```
-data/SNP_calls/freebayes_all_samples_raw_filt_asn_only.vcf
-data/SNP_calls/freebayes_Ocin2_raw_filt_asn_only.vcf
-data/SNP_calls/freebayes_Afus_Afus1_raw_filt.vcf
+python3 scripts/sort_variants_with_respect_to_chromosomes.py -o data/SNP_calls/freebayes_Afus_filt_sorted data/SNP_calls/freebayes_Afus_filt.vcf tables/chr_assignments_Afus1.tsv
+
+python3 scripts/sort_variants_with_respect_to_chromosomes.py -o data/SNP_calls/freebayes_Ocin2_filt_sorted data/SNP_calls/freebayes_Ocin2_filt.vcf tables/chr_assignments_Ocin1.tsv
 ```
 
-### Heterozygous SNP analysis
-
-
-First, I will extract just ne needed info about the variants in BH3-2
+First, I will extract just ne needed info about the variants in BH3-2, Afus1 and Ocin2
 
 ```bash
 i=10
@@ -133,86 +142,25 @@ for ind in WW5-3 WW5-4 WW5-5 WW3-1 WW2-1 Afus1 BH3-2 WW2-5 WW5-6 WW5-1 WW1-2 WW2
   i=$(($i+1));
 done
 
+# if to extract just BH3-2
+# grep -v "#" data/SNP_calls/freebayes_Afus_filt_sorted_A.vcf | cut -f 1,2,16 | tr -s ":" "\t" | cut -f 1,2,3,4,6,8 | cut -f 1 -d ',' | awk '{ if ($3 != "."){ print $0 } }' > data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_A.tsv
+# grep -v "#" data/SNP_calls/freebayes_Afus_filt_sorted_X.vcf | cut -f 1,2,16 | tr -s ":" "\t" | cut -f 1,2,3,4,6,8 | cut -f 1 -d ',' | awk '{ if ($3 != "."){ print $0 } }' > data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_X.tsv
+
+# Ocin2
 grep -v "^#" data/SNP_calls/freebayes_Ocin2_filt_sorted_A.vcf | cut -f 1,2,10 | tr -s ":" "\t" | cut -f 1,2,3,4,6,8 | cut -f 1 -d ',' | awk '{ if ($3 != "."){ print $0 } }' > data/SNP_calls/freebayes_Ocin2_filt_sorted_A_Ocin2.tsv
 grep -v "^#" data/SNP_calls/freebayes_Ocin2_filt_sorted_X.vcf | cut -f 1,2,10 | tr -s ":" "\t" | cut -f 1,2,3,4,6,8 | cut -f 1 -d ',' | awk '{ if ($3 != "."){ print $0 } }' > data/SNP_calls/freebayes_Ocin2_filt_sorted_X_Ocin2.tsv
-
-grep -v "^#" data/SNP_calls/freebayes_Afus_Afus1_raw_filt.vcf | cut -f 1,2,10 | tr -s ":" "\t" | cut -f 1,2,3,4,6,8 | cut -f 1 -d ',' | awk '{ if ($3 != "."){ print $0 } }' > data/SNP_calls/freebayes_Afus_Afus1_filt_reduced.tsv
 ```
 
-Now `data/SNP_calls/BH3-2_asn_snps.tsv` contains scf, pos, genotype, total_cov, ref_cov, alt_cov comuns.
+Now we have a bunch of `data/SNP_calls/*_sorted_X.tsv` and `data/SNP_calls/*_sorted_A.tsv` tables that contains scf, pos, genotype, total_cov, ref_cov, alt_cov comuns.
 
+### hypothesis testing
+
+### Heterozygous SNP analysis
 
 ```bash
 for ind in WW5-6 WW5-4 BH3-2 WW3-1 WW2-1 WW1-2 WW2-5 WW5-1 WW5-5 WW1-4 WW2-6 WW5-3; do
   Rscript scripts/plot_heterozygous_autosomal_allele_coverages.R "$ind" data/SNP_calls/run0/"$ind"_asn_snps.tsv figures/het_autosomal_allele_supports/"$ind".png;
 done
-```
-
-```R
-male_snp_tab <- read.table("data/SNP_calls/BH3-2_asn_snps.tsv")
-colnames(male_snp_tab) <- c('scf', 'pos', 'genotype', 'total_cov', 'ref_cov', 'alt_cov')
-
-asn_tab <- read.table('tables/chr_assignments_Afus1.tsv', header = T)
-strlen <- max(nchar(asn_tab$scf))
-
-names2tokens <- function(scf_name){
-  sapply(strsplit(scf_name, '_'), function(x){ added_0s <- (strlen - (1 + sum(nchar(x)))); paste0(x[1], paste0(rep('0', added_0s), collapse = ''), x[2]) } )
-}
-
-rownames(asn_tab) <- names2tokens(asn_tab$scf)
-male_snp_tab$chr <- asn_tab[names2tokens(male_snp_tab$scf), 'chr']
-
-male_snp_tab$cov_minor <- apply(male_snp_tab[, c('ref_cov', 'alt_cov')], 1, min)
-male_snp_tab$major_cov <- male_snp_tab$total_cov - male_snp_tab$cov_minor
-
-male_A_snps <- male_snp_tab[male_snp_tab$chr == 'A' & male_snp_tab$genotype == '0/1', ]
-male_X_snps <- male_snp_tab[male_snp_tab$chr == 'X' & male_snp_tab$genotype == '1/1', ]
-
-pal <- c('black', rgb(0.8, 0.05, 0.1, 0.55), rgb(0.02, 0.45, 0.65, 0.55))
-
-hist(male_X_snps$total_cov, breaks = 60, main = 'BH2-3', xlab = 'Coverage', freq = F, ylim = c(0, 0.1), col = pal[1])
-hist(male_A_snps$major_cov, col = pal[2], add = T, breaks = 120, freq = F)
-hist(male_A_snps$cov_minor, col = pal[3], add = T, freq = F, breaks = 60)
-legend('topright', c('X 1/1', 'A 0/1 major (maternal)', 'A 0/1 minor (paternal)'), pch = 20, cex = 1.5, bty = 'n', col = pal)
-```
-
-Let's try redo `Afus1`
-
-```R
-male_snp_tab <- read.table('data/SNP_calls/freebayes_Afus_Afus1_filt_reduced.tsv')
-colnames(male_snp_tab) <- c('scf', 'pos', 'genotype', 'total_cov', 'ref_cov', 'alt_cov')
-
-asn_tab <- read.table('tables/chr_assignments_Afus1.tsv', header = T)
-strlen <- max(nchar(male_snp_tab$scf))
-
-cov_tab <- read.table("../springtailome/data/resequencing/mapping/complete_coverage_table_medians.tsv", header = T, check.names = F)
-
-names2tokens <- function(scf_name){
-  sapply(strsplit(scf_name, '_'), function(x){ added_0s <- (strlen - (1 + sum(nchar(x)))); paste0(x[1], paste0(rep('0', added_0s), collapse = ''), x[2]) } )
-}
-
-rownames(asn_tab) <- names2tokens(asn_tab$scf)
-
-male_snp_tab$chr <- asn_tab[names2tokens(male_snp_tab$scf), 'chr']
-
-male_snp_tab$cov_minor <- apply(male_snp_tab[, c('ref_cov', 'alt_cov')], 1, min)
-male_snp_tab$major_cov <- male_snp_tab$total_cov - male_snp_tab$cov_minor
-
-cov_tab$chr <- asn_tab[names2tokens(cov_tab$scf), 'chr']
-male_X <- cov_tab[which(cov_tab$chr == 'X' & cov_tab$chr_medians == 'X'), c('scf', 'len', 'Afus1')]
-
-# male_snp_tab$chr_medians == 'A' &
-male_A_snps <- male_snp_tab[which(male_snp_tab$chr == 'A'), ]
-male_A_snps <- male_A_snps[male_A_snps$total_cov < 150, ]
-
-pal <- c('black', rgb(0.8, 0.05, 0.1, 0.55), rgb(0.02, 0.45, 0.65, 0.55))
-
-# hist(male_X$Afus1, breaks = 60, main = 'Afus1', xlab = 'Coverage', freq = F, ylim = c(0, 0.1), col = pal[1], xlim = c(0, 140))
-hist(male_A_snps$major_cov, col = pal[2], main = 'Afus1', ylim = c(0, 0.06), xlim = c(0, 120), xlab = 'Coverage', breaks = 120, freq = F)
-hist(male_A_snps$cov_minor, col = pal[3], add = T, freq = F, breaks = 60)
-lines(c(57.45, 57.45), c(0, 100), lwd = 2, lty = 2)
-
-legend('topright', c('X coverage expectation', 'A 0/1 major (maternal)', 'A 0/1 minor (paternal)'), pch = c(NA, 20, 20), lty = c(2, NA, NA), cex = 1.3, bty = 'n', col = pal)
 ```
 
 ### plotting notes

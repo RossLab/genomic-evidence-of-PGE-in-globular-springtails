@@ -16,6 +16,16 @@ informative_A_snps <- snp_tab_A[snp_tab_A$genotype == '0/1' & snp_tab_A$total_co
 informative_X_snps <- snp_tab_X[snp_tab_X$genotype == '1/1' & snp_tab_X$total_cov < 120 & snp_tab_X$total_cov > 5, ]
 coverage_data <- list(X = informative_X_snps$total_cov, A_minor = informative_A_snps$cov_minor, A_major = informative_A_snps$total_cov - informative_A_snps$cov_minor)
 
+print(paste('A 0/0: ', nrow(snp_tab_A[snp_tab_A$genotype == '1/1' & snp_tab_A$total_cov < 120 & snp_tab_A$total_cov > 50, ])))
+# [1] 915879
+print(paste('A 0/1: ', nrow(informative_A_snps)))
+# [1] 1959258
+print(paste('X 1/1: ', nrow(informative_X_snps)))
+# [1] 400001
+print(paste('X 0/1: ', nrow(snp_tab_X[snp_tab_X$genotype == '0/1' & snp_tab_X$total_cov < 120 & snp_tab_X$total_cov > 50, ])))
+# [1] 144204
+
+
 # random_subset <- sample(1:nrow(informative_A_snps), 50000)
 # library(hexbin)
 # library(RColorBrewer)
@@ -29,7 +39,7 @@ coverage_data <- list(X = informative_X_snps$total_cov, A_minor = informative_A_
 figure_name = 'figures/het_autosomal_allele_supports/autosomal_and_X_variant_coverages_Ocin2.png'
 source('scripts/load_palette.R')
 cex_legend <- 0.95
-xlim <- c(0, 100)
+xlim <- c(0, 120)
 # expectation <- c(19.47, 19.47)
 main <- ''# paste('Coverages supporting autosomal heterozygous alleles in', ind)
 
