@@ -10,10 +10,18 @@ The sequenced materials resequencing data: PRJEB44694
 
 #### organisation of the data
 
-All data will be automatically downloaded from EBI using
+All raw reads will be automatically downloaded from EBI using
 
 ```
-./snakemake_clust.sh download_all_reads
+snakemake download_all_reads
+```
+
+Downloading the reference genome
+
+```
+mkdir -p data/reference/Afus1/ data/reference/Ocin1/
+wget ftp://ftp.ebi.ac.uk/pub/databases/ena/wgs/public/caj/CAJVCH01.fasta.gz -O data/reference/Afus1/genome.fa.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/ena/wgs/public/lji/LJIJ01.fasta.gz -O data/reference/Ocin1/genome.fa.gz
 ```
 
 The data
@@ -23,7 +31,95 @@ The data
 - `data/raw_reads/{individual}/{accesion}_1.fastq.gz`
 - `data/reference/Afus1/genome.fa.gz`
 
-#### reference genome and X and A assignments
+
+### Coverage estimates
+
+This section shows
+
+1. k-mer based estimate of coverage (k-mer coverage) using genomescope
+2. mapping of reads and subsequent estimate of mapping coverages
+
+#### k-mer based
+
+Genome profiling for BH3-2 individual. We start by creating kmer database and then extracting a k-mer histogram
+
+```bash
+mkdir data/raw_reads/BH3-2/tmp
+ls data/raw_reads/BH3-2/ERR5883998_[1,2].fastq.gz > data/raw_reads/BH3-2/FILES
+# kmer 21, 16 threads, 64G of memory, counting kmer coverages between 1 and 10000x
+kmc -k21 -t30 -m64 -ci1 -cs100000 @data/raw_reads/BH3-2/FILES data/Ocin1/kmer_db/kmer_counts data/Ocin1/tmp
+kmc_tools transform data/Ocin1/kmer_db/kmer_counts histogram data/Ocin1/kmer_db/kmer_k21.hist -cx100000
+```
+
+now I fit the genomescope model to the kmer histogram
+
+```bash
+genomescope.R -i data/Ocin1/kmer_db/kmer_k21.hist -o data/Ocin1/genome_profiling -n Ocin1
+```
+
+Analogically for other samples...
+
+#### mapping based
+
+The reads are mapped on the reference using `bowtie2` and sorted using `samtools` as follows
+
+```sh
+bowtie2 --very-sensitive-local -p 16 -x $REFERENCE \
+        -1 $R1 -2 $R2 \
+        --rg-id "$RG_ID" --rg SM:"$SAMPLE" --rg PL:ILLUMINA --rg LB:LIB_"$SAMPLE" \
+        | samtools view -h -q -20 \
+        | samtools sort -@10 -O bam - > $SAMPLE.rg.sorted.bam
+```
+
+for all the samples run
+
+```
+snakemake map_all
+```
+
+Note, when I was mapping reads, I messed up something with the reference sample and run this script `scripts/mapping_reference_reads_Afus1.sh` instead. However, I think I fixed the problem afterwards so this note should be (hopefully) outdated.
+
+From mapped reads I extrated mapped
+
+**Allacma**
+
+```
+samtools depth data/mapped_reads/BH3-2.rg.sorted.rmdup.bam | scripts/depth2cov_per_contig.py > data/mapped_reads/BH3-2_cov_per_scf.tsv
+samtools depth data/mapped_reads/Afus1.rg.sorted.rmdup.bam | scripts/depth2cov_per_contig.py > data/mapped_reads/Afus1_cov_per_scf.tsv
+```
+
+etc. We then pull together all the mean coverages in a table [tables/Afus_mean_coverage_table.tsv](tables/Afus_mean_coverage_table.tsv) provided in this repo.
+
+**Orchesella**
+
+```
+samtools depth data/mapped_reads/Ocin2.rg.sorted.bam | scripts/depth2cov_per_contig.py > data/mapped_reads/Ocin2_cov_per_scf.tsv
+```
+
+#### Sexing samples / estimating mapping coverages
+
+We use weighted kernel smoothing to see how many modes there are in the mapping coverage (1 = female, 2 = male). Following script will plot `figures/Allacma_cov_estimates.png` and a bunch of thers too.
+
+```
+Rscript scripts/plot_mapping_coverages.R
+```
+
+but most importandly, it generates [tables/resequencing_coverage_estimates.tsv](tables/resequencing_coverage_estimates.tsv), which contains estimates of 2n mapping coverage estimates for all the samples, but also 1n estimates for the two male samples (`BH3-2` and `Afus1`).
+
+#### Assigning X chromosomes
+
+
+
+```
+Rscript s/assign-X-linked-scaffolds.R
+```
+
+generates `tables/chr_assignments_Afus1.tsv`
+
+### Expected coverages of heterozygous loci
+
+Calculation of expectation of allele coverages under different scenarios
+    Table 1: table of expected coverages in the two males
 
 
 
@@ -46,51 +142,9 @@ Some numbers
 # [1] 0.1095183
 ```
 
-#### k-mer based
+### X and A assignments
 
-#### mapping based
 
-The reads are mapped on the reference using `bowtie2` and sorted using `samtools` as follows
-
-```sh
-bowtie2 --very-sensitive-local -p 16 -x $REFERENCE \
-        -1 $R1 -2 $R2 \
-        --rg-id "$RG_ID" --rg SM:"$SAMPLE" --rg PL:ILLUMINA --rg LB:LIB_"$SAMPLE" \
-        | samtools view -h -q -20 \
-        | samtools sort -@10 -O bam - > $SAMPLE.rg.sorted.bam
-```
-
-for all the samples run
-
-```
-./snakemake_clust.sh map_all
-```
-
-**Allacma**
-
-Generating the reference
-
-TODO
-
-Mapping of the reference reads to reference genome
-
-```
-scripts/mapping_reference_reads_Afus1.sh
-
-samtools depth data/mapped_reads/BH3-2.rg.sorted.rmdup.bam | scripts/depth2cov_per_contig.py > data/mapped_reads/BH3-2_cov_per_scf.tsv
-samtools depth data/mapped_reads/Afus1.rg.sorted.rmdup.bam | scripts/depth2cov_per_contig.py > data/mapped_reads/Afus1_cov_per_scf.tsv
-```
-
-**Orchesella**
-
-```
-samtools depth data/mapped_reads/Ocin2.rg.sorted.bam | scripts/depth2cov_per_contig.py > data/mapped_reads/Ocin2_cov_per_scf.tsv
-```
-
-### Expected coverages of heterozygous loci
-
-Calculation of expectation of allele coverages under different scenarios
-    Table 1: table of expected coverages in the two males
 
 ### variant calling
 

@@ -20,7 +20,7 @@ row.names(coverage_est_tab) <- coverage_est_tab$ind
 ####
 # COVERAGE SEXING PLOT
 ####
-pdf('figures/Allacma_cov_estimates.pdf', width = 8, height = 6)
+png('figures/Allacma_cov_estimates.png', width = 800, height = 600)
 par(mfrow = c(3, 5))
 
 for (ind in coverage_est_tab$ind){
@@ -51,12 +51,12 @@ for (ind in coverage_est_tab$ind){
   }
 
   # plot for inspecting
-  plot(scf_ks, main = ind)
+  plot(scf_ks, main = ind, xlab = 'Coverage')
 }
 
 dev.off()
 
-# write.table(coverage_est_tab, "tables/resequencing_coverage_estimates.tsv", row.names = F, col.names = T, quote = F, sep = '\t')
+write.table(coverage_est_tab, "tables/resequencing_coverage_estimates.tsv", row.names = F, col.names = T, quote = F, sep = '\t')
 
 
 ####

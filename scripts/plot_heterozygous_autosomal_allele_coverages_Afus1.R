@@ -60,3 +60,20 @@ png(figure_name, units="in", width=5, height=5, res=300)
 	# legend('topright', lty = c(NA, 2), col = c('black'), c('', 'expectation'), bty = 'n', cex = cex_legend, lwd = 2)
 
 dev.off()
+
+source('scripts/get_peaks.R')
+
+plot_minor_allele_freq_hist <- function(minor_allele_freq, col, main, adjust = 1.5, min_cov = 0){
+	ks <- density(minor_allele_freq, adjust = adjust)
+	peaks <- get_peaks(ks)
+	print(peaks)
+	hist(minor_allele_freq, col = col, freq = F, breaks = 20, xlab = 'minor allele coverage ratio', main = main)
+	lines(ks, lwd = 3)
+	arrows(peaks[nrow(peaks), 'cov'], peaks[nrow(peaks), 'height'] + 0.5, peaks[nrow(peaks), 'cov'], peaks[nrow(peaks), 'height'] + 0.2, length = 0.1, lwd = 2)
+	text(peaks[nrow(peaks), 'cov'], peaks[nrow(peaks), 'height'] + 0.7, round(peaks[nrow(peaks), 'cov'], 4), cex = 1)
+}
+
+figure_name = 'figures/het_autosomal_allele_supports/autosomal_coverage_ratio_Afus1.png'
+png(figure_name, units="in", width=5, height=5, res=300)
+	plot_minor_allele_freq_hist(informative_A_snps$cov_minor / informative_A_snps$total_cov, 'grey', main = 'Afus1', 2)
+dev.off()
