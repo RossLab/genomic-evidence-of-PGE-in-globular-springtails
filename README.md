@@ -2,7 +2,7 @@
 
 This is a supplementary material. It allows, nearly perfect, replication of the study and exact code that was used to generate all the results and figures.
 
-You can also check [ESEB talk about preliminary results of this work](https://www.youtube.com/watch?v=LKBG5AqkUqg&t=5363s).
+You can also check [ESEB talk about preliminary results of this work](https://youtu.be/LKBG5AqkUqg?t=4646).
 
 ### Springtails collected and sequenced
 
@@ -108,43 +108,22 @@ but most importandly, it generates [tables/resequencing_coverage_estimates.tsv](
 
 #### Assigning X chromosomes
 
-
+To generate `tables/chr_assignments_Afus1.tsv` table, run following R script
 
 ```
 Rscript s/assign-X-linked-scaffolds.R
 ```
-
-generates `tables/chr_assignments_Afus1.tsv`
 
 ### Expected coverages of heterozygous loci
 
 Calculation of expectation of allele coverages under different scenarios
     Table 1: table of expected coverages in the two males
 
-
-
 ### Coverage estimates
 
-Some numbers
+We ploted the modality of the coverage distributions used for sexing of individuals (unimodal - females; bimodal - males; SM Figure 1) and estimated the 1n/2n coverages from mapped reads to the reference using kernel smoothing. Both operation performed in the [plot_mapping_coverages.R](scripts/plot_mapping_coverages.R) script.
 
-```
-# > 95.3122 / 2
-# [1] 47.6561
-# > 29.6378 / 2
-# [1] 14.8189
-# > 18.50149 - 29.6378 / 2
-# [1] 3.68259
-# > 58.09453 - 47.6561
-# [1] 10.43843
-# > 3.68259 / 29.6378
-# [1] 0.1242531
-# > 10.43843 / 95.3122
-# [1] 0.1095183
-```
-
-### X and A assignments
-
-
+As the result, we have [the table](https://github.com/RossLab/genomic-evidence-of-PGE-in-globular-springtails/blob/master/tables/resequencing_coverage_estimates.tsv) with coverage estimates.
 
 ### variant calling
 
