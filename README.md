@@ -4,11 +4,11 @@ This is a supplementary material. It allows, nearly perfect, replication of the 
 
 You can also check [ESEB talk about preliminary results of this work](https://youtu.be/LKBG5AqkUqg?t=4646).
 
-### Springtails collected and sequenced
+## Springtails collected and sequenced
 
 The sequenced materials resequencing data: PRJEB44694
 
-#### organisation of the data
+### organisation of the data
 
 All raw reads will be automatically downloaded from EBI using
 
@@ -32,34 +32,66 @@ The data
 - `data/reference/Afus1/genome.fa.gz`
 
 
-### Coverage estimates
+## Coverage estimates
 
 This section shows
 
 1. k-mer based estimate of coverage (k-mer coverage) using genomescope
 2. mapping of reads and subsequent estimate of mapping coverages
 
-#### k-mer based
+#### k-mer based estimation of two tissue model
 
-Genome profiling for BH3-2 individual. We start by creating kmer database and then extracting a k-mer histogram
+This approach is complementary to to the mapping approach, the advantage is that it can be done directly on the k-mer spectra and it's does not require assembling and mapping reads (and therefore avoids all the problems with these processes). The drawback is that each male k-mer spectrum will have co-founded paternal heterozygous sites with X chromosome and maternal autosomal sites, therefore the interpretation of the first k-mer peak is not as streightforward as of the first peak of the mapping coverage.
+
+#### The choice of k
+
+Lower k helps with low coverage datasets in cost of resolution. Usually for genomes with relatively modest coverage and short reads a default k = 21 is used. We also use this k for all our genomes with exception of BH3-2, where we (after attempting of fitting a model with k = 21) reduced the k to 17.
+
+With k = 17, a smaller fraction of genome occurs on unique k-mers, but the k-mer coverage is (R - k + 1 / R) * C, hence lower k is, higher coverage we get. The improvement is only marginal, but we needs only a marginal improvement to make the fit easier.
+
+#### Generating k-mer spectra histograms
+
+Here is an exmaple for one sample (BH3-2) and one values of k (21) - funny enough, this not a k-mer spectrum we used in the end as we later redid it with k = 17, but the principle remains the same.
+
+We start by creating kmer database and then extracting a k-mer histogram
 
 ```bash
 mkdir data/raw_reads/BH3-2/tmp
 ls data/raw_reads/BH3-2/ERR5883998_[1,2].fastq.gz > data/raw_reads/BH3-2/FILES
 # kmer 21, 16 threads, 64G of memory, counting kmer coverages between 1 and 10000x
-kmc -k21 -t30 -m64 -ci1 -cs100000 @data/raw_reads/BH3-2/FILES data/Ocin1/kmer_db/kmer_counts data/Ocin1/tmp
-kmc_tools transform data/Ocin1/kmer_db/kmer_counts histogram data/Ocin1/kmer_db/kmer_k21.hist -cx100000
+kmc -k21 -t30 -m64 -ci1 -cs100000 @data/raw_reads/BH3-2/FILES data/BH3-2/kmer_db/kmer_counts data/BH3-2/tmp
+kmc_tools transform data/BH3-2/kmer_db/kmer_counts histogram data/Ocin1/BH3-2/kmer_k21.hist -cx100000
 ```
 
-now I fit the genomescope model to the kmer histogram
+And do this for all the samples.
+
+#### estimating 1n and 2n coverage from k-mer spectra
+
+These models are largely insprired by [GenomsScope source code](https://github.com/schatzlab/genomescope) and GenomeScope is included among the used models. They are adjusted and simplified models that are estimating 1n and 2n peaks indipendently (i.e. approach similar to the coverage analysis of mapped reads). The simplification of GenomeScope model lays is two aspects - first, we completelly ignore anything that occurs in the genome more than once or twice (kmers in the 1n and 2n peaks), while GenomeScope has an explicit fit of duplications within the genome. Second is that we removed the term that is estimating genome-wise heterozygosity knowing k-mer length. Instead we use term `het`, which simply proportion of 1n and 2n k-mers that are in the 1n peak. That is because we don't actually desire to estmate hererozygosity and the model converges better we simplify the term. Hence the model to fit the two peaks indipendently is
+
+```{R}
+# model, x - coverages, y - coverage frequencies, kmerEst, lengthEst, hetEst - starting values for the respective parameters
+# note that kmerEst (and 2*) is a starting value for both kmercov and kmercov2 - which are the two indipendent estimates of positions of the coverage peaks, bias is the overdispersal term
+nlsLM_2peak_unconditional_peaks <- function(x, y, kmerEst, lengthEst, hetEst = 0.6){
+  nlsLM(y ~ ((het       * dnbinom(x, size = kmercov   / bias, mu = kmercov)) +
+            ((1 - het)  * dnbinom(x, size = kmercov2  / bias, mu = kmercov2))) * length,
+        start = list(kmercov = kmerEst, kmercov2 = (2 * kmerEst), bias = 0.5, length = lengthEst, het = hetEst),
+        control = list(minFactor=1e-12, maxiter=40))
+}
+```
+
+All the fits of the two tissue model are calculated in the [scripts/kmer_estimates_of_two_tissue_model.R](scripts/kmer_estimates_of_two_tissue_model.R) script.
+
+TODO: generate a nice output table directly within the script
+TODO: generate a few nice plots I should show here
+
+We have also used classical GenomeScope model to validate our approach. The genomescope was fit as follows
 
 ```bash
 genomescope.R -i data/Ocin1/kmer_db/kmer_k21.hist -o data/Ocin1/genome_profiling -n Ocin1
 ```
 
-Analogically for other samples...
-
-#### mapping based
+### mapping based coverage estimates
 
 The reads are mapped on the reference using `bowtie2` and sorted using `samtools` as follows
 
@@ -111,7 +143,7 @@ but most importandly, it generates [tables/resequencing_coverage_estimates.tsv](
 To generate `tables/chr_assignments_Afus1.tsv` table, run following R script
 
 ```
-Rscript s/assign-X-linked-scaffolds.R
+Rscript scripts/assign-X-linked-scaffolds.R
 ```
 
 ### Expected coverages of heterozygous loci
@@ -119,13 +151,21 @@ Rscript s/assign-X-linked-scaffolds.R
 Calculation of expectation of allele coverages under different scenarios
     Table 1: table of expected coverages in the two males
 
-### Coverage estimates
+#### k-mer based expecations
+
+TODO
+
+#### Coverage estimates
 
 We ploted the modality of the coverage distributions used for sexing of individuals (unimodal - females; bimodal - males; SM Figure 1) and estimated the 1n/2n coverages from mapped reads to the reference using kernel smoothing. Both operation performed in the [plot_mapping_coverages.R](scripts/plot_mapping_coverages.R) script.
 
 As the result, we have [the table](https://github.com/RossLab/genomic-evidence-of-PGE-in-globular-springtails/blob/master/tables/resequencing_coverage_estimates.tsv) with coverage estimates.
 
-### variant calling
+### Testing PGE using allele coverages
+
+TODO
+
+#### variant calling
 
 We call variants using freebayes.
 
@@ -186,7 +226,9 @@ grep -v "^#" data/SNP_calls/freebayes_Ocin2_filt_sorted_X.vcf | cut -f 1,2,10 | 
 
 Now we have a bunch of `data/SNP_calls/*_sorted_X.tsv` and `data/SNP_calls/*_sorted_A.tsv` tables that contains scf, pos, genotype, total_cov, ref_cov, alt_cov comuns.
 
-### hypothesis testing
+#### hypothesis testing
+
+TODO
 
 ### Heterozygous SNP analysis
 
@@ -261,3 +303,30 @@ Coverage plots:
     ```
 
     plots them all (`figures/mapping_coverages/*`).
+
+## Supplementary analyses
+
+
+### Potential causes of the inacurately high estimate of sperm in Ocin2
+
+Using mapped reads of `Ocin2` to the reference genome (ID), we estimated 1n and 2n coverage to be 53.43x and 101.12x respectively. According to the two tissue model this would imply that `Ocin2` - a species with completely regular meiosis, has ~10% of the body form of cells with the same number of sex chromosomes and
+
+```{R}
+asn_tab <- read.table('tables/chr_assignments_Ocin1.tsv', header = T)
+ind = 'Ocin2'
+ind_tab <- asn_tab[asn_tab[, 'male_coverage'] < filt_quantile & asn_tab[, 'len'] > 20000, c('scf', 'len', 'male_coverage')]
+
+cov_2n <- 101.1228
+cov_1n <- 53.4376
+
+png('figures/Ocin2_male_coverage_vs_scf_length.png')
+  plot(ind_tab$male_coverage, log10(ind_tab$len), pch = 20, xlab = 'Coverage', ylab = 'log10 Scaffold length', main = 'mapping coverage vs scaffold length in O. cincta male')
+  lines(c(53.3, 53.3), c(min(log10(ind_tab$len)), 6), lwd = 2, col = 'red')
+  lines(c(101.15, 101.15), c(min(log10(ind_tab$len)), 6), lwd = 2, lty = 2, col = 'red')
+  legend('topright', bty = 'n', c('1n coverage est', '2n coverage est'), lty = c(1, 2), lwd = 2, col = 'red')
+dev.off()
+```
+
+Looking at this plot, it is very clear that at leas some of the long scaffolds are in part missabled or with large scale structural variations. Scaffolds that have a few hundred thousand bases are expected to have the mean mapping coverage very close to the expected value, however, we do see substantial number of data points that are in between of the two distributions and therefore are likely representing a chimera of long stretches of sequences that are in one or two genomic copies in the male genome. These streches might be either large scale deletions or misassembled pieces of the X chromosome.
+
+Every assembly error or structural variation will cause that the mean scaffold mapping covrerage will be somewhere between true 1n and 2n coverage. Hence, the two peaks will always be closer to each other than they would exected to be in perfect data which implies that these errors will bias and inflate the estimate.
