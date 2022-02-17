@@ -15,7 +15,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create a randomised subset of a genome.")
     parser.add_argument('-g', '-genome', help='genome file (.fasta, can be gzipped, but must be indexed)')
     parser.add_argument('-a', '-assignments', help="A teb-delimited table with chromosomal assignmensts (scf, chr columns are expected)")
-    parser.add_argument('-c', '-chromosome', help="Chromosome to be generated (defalt: all)")
+    parser.add_argument('-c', '-chromosome', help="Chromosome to be generated (defalt: all)", default = 'all')
     parser.add_argument('-l', '-length', help='The total length of newly sampled reference (in Mbp, default: 20)', default = 20, type = int)
     parser.add_argument('-o', '-output', help='output pattern (default: sampled_genome)', default = 'sampled_genome.fasta')
     parser.add_argument('-s', '-seed', help='seed for generating random numbers (default: defined by time)', default = None, type = int)
@@ -38,8 +38,8 @@ if __name__ == "__main__":
             scf_info = line.rstrip('\n').split('\t')
             scf = scf_info[scf_i]
             chr = scf_info[chr_i]
-            scf2asn[scf] = chr
-            if chr == args.c:
+            if chr == args.c or args.c == 'all':
+                scf2asn[scf] = chr
                 does_the_chromosome_exist = True
         sys.stderr.write('loaded {} scaffolds with feature: {}\n'.format(len(scf2asn), args.a))
 
@@ -65,10 +65,11 @@ if __name__ == "__main__":
     added_scaffolds = set()
 
     with open(args.o, 'w') as output_fasta:
+        output_fasta.write('>simulated_' + args.c + '_chromosome_with_' + str(used_seed) + '_seed\n')
         while sampled_length < total_desired:
             picked_scf = choice(list(scf2asn.keys()))
             # if the scaffold was not picked yet AND if it has the desired chromosome assignment
-            if not picked_scf in added_scaffolds and scf2asn[picked_scf] == args.c:
+            if not picked_scf in added_scaffolds and (scf2asn[picked_scf] == args.c or args.c == 'all'):
                 added_scaffolds.add(picked_scf)
                 scaffold_record = genome[picked_scf]
                 if len(scaffold_record) + sampled_length > total_desired:
@@ -77,7 +78,7 @@ if __name__ == "__main__":
                     seq_to_print = scaffold_record[0:]
                 sampled_length += len(scaffold_record)
 
-                output_fasta.write('>' + scaffold_record.name + '\n')
-                output_fasta.write(str(seq_to_print) + '\n')
+                output_fasta.write(str(seq_to_print))
+        output_fasta.write('\n')
 
     sys.stderr.write('Done\n')
