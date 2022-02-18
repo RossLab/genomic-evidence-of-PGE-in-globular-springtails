@@ -5,16 +5,17 @@ from random import sample
 from random import seed
 from random import randint
 from statistics import mean
+from sys import argv
 
 if __name__ == "__main__":
     args = None
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         args = ["--help"]
 
     parser = argparse.ArgumentParser(description="Create reasobnably distributed heterozygosity along dataset on an genome input.")
     parser.add_argument('-g', '-genome', help='genome, only the first record will be taken as the template (.fasta)')
-    parser.add_argument('-h', '-heterozygosity', help='total simulated heterozygosity (default: 0.3)', default = 0.3, type = float)
-    parser.add_argument('-N', '-population_size', help='Ne (default: 1e4)', default = 1e4, type = int)
+    parser.add_argument('-het', '-heterozygosity', help='total simulated heterozygosity (default: 0.3)', default = 0.3, type = float)
+    parser.add_argument('-Ne', '-population_size', help='Ne (default: 1e4)', default = 1e4, type = int)
     parser.add_argument('-o', '-output', help='output pattern. "_ref.fasta" and "_alt.fasta" files will be generated (default:basename of the provided reference)', default = None)
     parser.add_argument('-s', '-seed', help='seed for generating random numbers (default: defined by time)', default = None, type = int)
     args = parser.parse_args(args)
@@ -26,7 +27,7 @@ if __name__ == "__main__":
     seq_header = single_record.name
     number_of_loci = single_record.unpadded_len
 
-    sys.stderr.write('loaded {} file\n'.format(args.g))
+    # sys.stderr.write('loaded {} file\n'.format(args.g))
 
     ##### Setting up the random number generator
     if args.s == None:
@@ -35,22 +36,20 @@ if __name__ == "__main__":
         used_seed = args.s
     # used_seed = 15641
 
-    # args.N = 1e4
-    Ne = args.N
     # heterozygosity (theta) = 4 * mu * Ne
     # therefore mu = theta / (4 * Ne)
     # args.h = 0.3
-    mu = args.h / (4 * Ne)
+    mu = args.het / (4 * args.Ne)
 
     # this simulates ancestry along all the loci on the chromosome given a reasonable recombination rates (50cM over the whole chromosome)
     ts = msprime.sim_ancestry(
             samples=1,
             ploidy=2,
-            population_size=Ne,
+            population_size=args.Ne,
             discrete_genome=True,# default setting now?
             recombination_rate=(0.5 / number_of_loci), # 0.5 / 1e6
             sequence_length=number_of_loci, random_seed=used_seed)
-    mts = msprime.sim_mutations(ts, rate=mu/2, random_seed=(used_seed + 1))
+    mts = msprime.sim_mutations(ts, rate=mu, random_seed=(used_seed + 1))
 
 
     # setting up template seuquence
