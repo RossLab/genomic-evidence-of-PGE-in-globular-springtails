@@ -49,8 +49,13 @@ tab <- read.table('data/generated/kmcdb_k21.hist')
 plot(tab$V1[3:100], tab$V2[3:100])
 ```
 
-#### Mapping reads and estimating the coverage
+but let's see about two tissue model
 
+```{R}
+Rscript scripts/two_tissue_model.R -i data/generated/kmcdb_k21.hist
+```
+
+#### Mapping reads and estimating the coverage
 
 #### Mapping reads and estimating the coverage
 
