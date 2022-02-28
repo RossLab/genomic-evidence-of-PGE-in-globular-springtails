@@ -57,7 +57,7 @@ Rscript scripts/two_tissue_model.R -i data/generated/kmcdb_k21.hist
 
 #### Mapping reads and estimating the coverage
 
-#### Mapping reads and estimating the coverage
+
 
 
 ### Explored parametric space

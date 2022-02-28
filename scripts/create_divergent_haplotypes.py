@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Create reasobnably distributed heterozygosity along dataset on an genome input.")
     parser.add_argument('-g', '-genome', help='genome, only the first record will be taken as the template (.fasta)')
-    parser.add_argument('-het', '-heterozygosity', help='total simulated heterozygosity (default: 0.3)', default = 0.3, type = float)
+    parser.add_argument('-het', '-heterozygosity', help='total simulated heterozygosity (theta, default: 0.003)', default = 0.003, type = float)
     parser.add_argument('-Ne', '-population_size', help='Ne (default: 1e4)', default = 1e4, type = int)
     parser.add_argument('-o', '-output', help='output pattern. "_ref.fasta" and "_alt.fasta" files will be generated (default:basename of the provided reference)', default = None)
     parser.add_argument('-s', '-seed', help='seed for generating random numbers (default: defined by time)', default = None, type = int)
