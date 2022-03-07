@@ -96,6 +96,9 @@ genomescope.R -i data/Ocin1/kmer_db/kmer_k21.hist -o data/Ocin1/genome_profiling
 The reads are mapped on the reference using `bowtie2` and sorted using `samtools` as follows
 
 ```sh
+# indexing reference
+# bowtie2-build data/reference/Afus1/genome.fa.gz $REFERENCE
+
 bowtie2 --very-sensitive-local -p 16 -x $REFERENCE \
         -1 $R1 -2 $R2 \
         --rg-id "$RG_ID" --rg SM:"$SAMPLE" --rg PL:ILLUMINA --rg LB:LIB_"$SAMPLE" \
