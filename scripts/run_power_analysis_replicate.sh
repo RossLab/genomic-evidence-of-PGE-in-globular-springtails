@@ -2,6 +2,8 @@
 
 # qsub ... "scripts/run_power_analysis_replicate.sh 0.001 10 25 15"
 
+set -e
+
 theta=$1
 X_chromosomes=$2 # number of 1Mbp chromosomes that are X-linked.
 autosomes=$((20 - $X_chromosomes)) # each genome is 20Mbp long, so 20 - X -> autosomes
@@ -9,7 +11,8 @@ maternal_coverage=$3
 paternal_coverage=$4
 
 source_dir=$(pwd)
-sim=sim_h"$heterozygosity"_X"$X_chromosomes"_s"$fraction_of_sperm"_d"$depth"
+sim=sim_h"$theta"_X"$X_chromosomes"_m"$maternal_coverage"_p"$paternal_coverage"
+
 working_dir=/scratch/kjaron/"$sim"
 
 reference_template=data/reference/Afus1/genome_short_headers.fa
@@ -44,11 +47,11 @@ python3 scripts/simulate_reads.py -g simulation/sim_genome_X_mat.fasta -c $mater
 python3 scripts/simulate_reads.py -g simulation/sim_genome_A_pat.fasta  -c $paternal_coverage -o simulation/reads_paternal_A
 
 cat simulation/reads_maternal_A_R1.fq simulation/reads_maternal_X_R1.fq simulation/reads_paternal_A_R1.fq > simulation/sim_reads_R1.fq
-cat simulation/maternal_A_R2.fq simulation/maternal_X_R2.fq simulation/paternal_A_R2.fq > simulation/sim_reads_R2.fq
+cat simulation/reads_maternal_A_R2.fq simulation/reads_maternal_X_R2.fq simulation/reads_paternal_A_R2.fq > simulation/sim_reads_R2.fq
 
 echo "Step 3 done: Reads were generated (simulation/sim_reads_R?.fq)"
 
-cp "$source_dir"/scripts/two_tissue_model.R scripts
+cp "$source_dir"/scripts/two_tissue_model.R "$source_dir"/scripts/two_tissue_model_functions.R scripts
 ls simulation/sim_reads_R?.fq > simulation/FILES
 
 kmc -k21 -t2 -m4 -ci1 -cs1000 @simulation/FILES simulation/kmcdb tmp
@@ -59,7 +62,6 @@ Rscript scripts/two_tissue_model.R -i output/kmcdb_k21.hist -o output/two_tissue
 echo "Step 4 done: k-mer histogram generated and the model fit (output/kmcdb_k21.hist and output/two_tissue_model*)"
 
 rm -r simulation
-rsync -av --remove-source-files $working_dir $source_dir/
-
+rsync -av --remove-source-files $working_dir $source_dir/data/simulations/
 
 echo "Done. With everything!"

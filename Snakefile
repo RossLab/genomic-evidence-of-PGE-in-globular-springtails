@@ -52,11 +52,11 @@ rule trim_reads :
 	shell : "scripts/trim_reads.sh data/raw_reads/{wildcards.ind}/{wildcards.accesion}_[1,2].fastq.gz data/trimmed_reads/{wildcards.ind}/{wildcards.accesion}"
 
 rule index_reference :
-	threads : 1
+	threads : 8
 	resources : mem=2000000, tmp=30000
 	input : "data/reference/{sp}/genome.fa.gz"
 	output: "data/reference/{sp}/idx.1.bt2"
-	shell : "index_reference.sh {input} data/reference/{wildcards.sp}/idx"
+	shell : "bowtie2-build --threads 8 <(zcat {input}) data/reference/{wildcards.sp}/idx"
 
 rule map_reads_to_Afus1 :
 	threads : 16

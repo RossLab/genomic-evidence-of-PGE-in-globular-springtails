@@ -9,10 +9,11 @@ REFERENCE=$DATADIR/data/Afus1/genome/idx
 
 mkdir -p $DATADIR/$OUTDIR
 mkdir -p $SCRATCH/$OUTDIR
+
 cd $SCRATCH
 
-R1="data/Afus1/trimmed_reads/Afus1-trimmed-pair1.fastq.gz"
-R2="data/Afus1/trimmed_reads/Afus1-trimmed-pair1.fastq.gz"
+R1=$DATADIR/"data/Afus1/trimmed_reads/Afus1-trimmed-pair1.fastq.gz"
+R2=$DATADIR/"data/Afus1/trimmed_reads/Afus1-trimmed-pair2.fastq.gz"
 
 # handling readgroups from sequencing files
 FLOWCELL="HHMYHCCXY"
@@ -27,5 +28,4 @@ bowtie2 --very-sensitive-local -p 16 -x $REFERENCE \
 
 rsync -av --remove-source-files $SAMPLE.rg.sorted.bam $DATADIR/$OUTDIR
 
-rm BAM_FILES
 find /scratch/$USER/$JODID -depth -type d -exec rmdir {} \;

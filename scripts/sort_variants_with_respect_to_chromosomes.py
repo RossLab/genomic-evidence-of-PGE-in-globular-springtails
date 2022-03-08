@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+from mimetypes import guess_type
 from sys import stderr
 from sys import stdout
 from collections import defaultdict
 import argparse
+import gzip
 
 def sort_variant(scf, line_to_sort):
     if scf2chr[scf] == 'A':
@@ -19,6 +21,9 @@ parser.add_argument('asignment_table', help='tsv file with header that contain "
 parser.add_argument('-o', '-output', help='pattern used to generate new vcf files (with _<Chr>.vcf suffix)', default = 'sorted_variants')
 
 args = parser.parse_args()
+
+encoding = guess_type(args.vcf_file)[1]
+_open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
 
 stderr.write("Sorting " + args.vcf_file + " vcf file using " + args.asignment_table + " asignment table.")
 
@@ -43,7 +48,7 @@ variant_file_X = open(args.o + "_X.vcf", "w")
 variant_file_other = open(args.o + "_other.vcf", "w")
 
 # args.vcf_file='data/resequencing/SNP_calls/freebayes_all_samples_filt.vcf'
-with open(args.vcf_file) as vcf_file:
+with _open(args.vcf_file) as vcf_file:
     header_line = vcf_file.readline()
     while header_line.startswith("#"):
         if header_line.startswith('##contig'):
