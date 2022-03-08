@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# qsub ... "scripts/run_power_analysis_replicate.sh 0.001 10 25 15"
+# qsub -o logs -e logs -cwd -N power_analysis -V -pe smp64 2 -b yes "scripts/run_power_analysis_replicate.sh 0.001 10 25 15"
 
 theta=$1
 X_chromosomes=$2 # number of 1Mbp chromosomes that are X-linked.
@@ -58,8 +58,11 @@ Rscript scripts/two_tissue_model.R -i output/kmcdb_k21.hist -o output/two_tissue
 
 echo "Step 4 done: k-mer histogram generated and the model fit (output/kmcdb_k21.hist and output/two_tissue_model*)"
 
+
+echo "Step 5 done: mapping coverage estimated (output/kmcdb_k21.hist and output/two_tissue_model*)"
+
 rm -r simulation
-rsync -av --remove-source-files $working_dir $source_dir/
+rsync -av --remove-source-files $working_dir $source_dir/data/simulations
 
 
 echo "Done. With everything!"

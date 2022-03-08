@@ -7,10 +7,10 @@ Here I am designing individual components of the pipeline. In the end I will wra
 Script `scripts/generate_reference_subset.py` can generate a subset of the genome reference with desired total length. They will be randomly sampled scaffolds that are already in the genome. And it was tested to have deterministic behavior when seed is specified. Example use would be
 
 ```
-python3 scripts/generate_reference_subset.py -g data/reference/Afus1/genome_short_headers.fa -a tables/chr_assignments_Afus1.tsv -c "A" -l 1 -n 19 -o data/generated/Afus_sim_reference_A.fasta
-python3 scripts/generate_reference_subset.py -g data/reference/Afus1/genome_short_headers.fa -a tables/chr_assignments_Afus1.tsv -c "X" -l 1 -o data/generated/Afus_sim_reference_X.fasta
+python3 scripts/generate_reference_subset.py -g data/reference/Afus1/genome_short_headers.fa -a tables/chr_assignments_Afus1.tsv -c "A" -l 1 -n 19 -o simulation/Afus_sim_reference_A.fasta
+python3 scripts/generate_reference_subset.py -g data/reference/Afus1/genome_short_headers.fa -a tables/chr_assignments_Afus1.tsv -c "X" -l 1 -o simulation/Afus_sim_reference_X.fasta
 
-cat data/generated/sim_reference_A.fasta data/generated/sim_reference_X.fasta > data/sim_reference_complete.fasta
+cat simulation/sim_reference_A.fasta simulation/sim_reference_X.fasta > data/sim_reference_complete.fasta
 ```
 
 which generates 1Mbp of X-linked reference sequences.
@@ -18,67 +18,74 @@ which generates 1Mbp of X-linked reference sequences.
 #### Simulating variants on top of the refenrece
 
 ```
-python3 scripts/create_divergent_haplotypes.py -g data/generated/sim_reference_A.fasta -het 0.003 -o data/generated/sim_genome_A
-python3 scripts/create_divergent_haplotypes.py -g data/generated/sim_reference_X.fasta -het 0.003 -o data/generated/sim_genome_X
+python3 scripts/create_divergent_haplotypes.py -g simulation/sim_reference_A.fasta -het 0.003 -o simulation/sim_genome_A
+python3 scripts/create_divergent_haplotypes.py -g simulation/sim_reference_X.fasta -het 0.003 -o simulation/sim_genome_X
 ```
 
 #### Simulating the reads
 
 ```
 # maternal A
-python3 scripts/simulate_reads.py -g data/generated/sim_genome_A_mat.fasta  -c 50 -r 150 -o data/generated/maternal_A
+python3 scripts/simulate_reads.py -g simulation/sim_genome_A_mat.fasta  -c 50 -r 150 -o simulation/maternal_A
 
 # maternal X
-python3 scripts/simulate_reads.py -g data/generated/Afus_reference_X_ch.fasta -c 50 -r 150 -o data/generated/maternal_X
+python3 scripts/simulate_reads.py -g simulation/Afus_reference_X_ch.fasta -c 50 -r 150 -o simulation/maternal_X
 
 # paternal A
-python3 scripts/simulate_reads.py -g data/generated/Afus_reference_subset_alt.fasta  -c 50 -r 150 -o data/generated/paternal_A
+python3 scripts/simulate_reads.py -g simulation/Afus_reference_subset_alt.fasta  -c 50 -r 150 -o simulation/paternal_A
 
-cat data/generated/maternal_A_R1.fq data/generated/maternal_X_R1.fq data/generated/paternal_A_R1.fq > data/generated/sim_reads_R1.fq
-cat data/generated/maternal_A_R2.fq data/generated/maternal_X_R2.fq data/generated/paternal_A_R2.fq > data/generated/sim_reads_R2.fq
+cat simulation/maternal_A_R1.fq simulation/maternal_X_R1.fq simulation/paternal_A_R1.fq > simulation/sim_reads_R1.fq
+cat simulation/maternal_A_R2.fq simulation/maternal_X_R2.fq simulation/paternal_A_R2.fq > simulation/sim_reads_R2.fq
 ```
 
 #### K-mer based estimate of 1n and 2n
 
 ```
-ls data/generated/maternal_A*.fq data/generated/maternal_X*.fq data/generated/paternal_A*.fq > data/generated/FILES
+ls simulation/maternal_A*.fq simulation/maternal_X*.fq simulation/paternal_A*.fq > simulation/FILES
 mkdir -p tmp
 
-kmc -k21 -t2 -m4 -ci1 -cs1000 @data/generated/FILES data/generated/kmcdb tmp
-kmc_tools transform data/generated/kmcdb histogram data/generated/kmcdb_k21.hist -cx1000
+kmc -k21 -t2 -m4 -ci1 -cs1000 @simulation/FILES simulation/kmcdb tmp
+kmc_tools transform simulation/kmcdb histogram simulation/kmcdb_k21.hist -cx1000
 ```
 
 Alright, now we generated from the simualted data a k-mer histogram!
 
 ```{R}
-tab <- read.table('data/generated/kmcdb_k21.hist')
+tab <- read.table('simulation/kmcdb_k21.hist')
 plot(tab$V1[3:100], tab$V2[3:100])
 ```
 
 but let's see about two tissue model
 
 ```{R}
-Rscript scripts/two_tissue_model.R -i data/generated/kmcdb_k21.hist
+Rscript scripts/two_tissue_model.R -i simulation/kmcdb_k21.hist
 ```
 
 #### Mapping reads and estimating the coverage
 
 ```
-REFERENCE=data/generated/generated_complete_sim_reference
-bowtie2-build data/generated_complete_sim_reference.fasta $REFERENCE
+REFERENCE=simulation/generated_complete_sim_reference
+bowtie2-build simulation_complete_sim_reference.fasta $REFERENCE
 
-R1=data/generated/sim_reads_R1.fq
-R2=data/generated/sim_reads_R2.fq
+R1=simulation/sim_reads_R1.fq
+R2=simulation/sim_reads_R2.fq
 
 bowtie2 --very-sensitive-local -p 4 -x $REFERENCE \
         -1 $R1 -2 $R2 \
         --rg-id 1 --rg SM:rand --rg PL:ILLUMINA --rg LB:LIB_rand \
         | samtools view -h -q -20 \
-        | samtools sort -O bam - > data/generated/rand.rg.sorted.bam
+        | samtools sort -O bam - > simulation/rand.rg.sorted.bam
 ```
 
-reads -> conclusions
+Mapped reads to a table of coverages (coverage per 10,000 nt).
 
+```
+samtools depth simulation/rand.rg.sorted.bam | perl scripts/depth2windows.pl 10000 > simulation/per_window_coverage.tsv
+```
+
+```
+Rscript simulation/per_window_coverage.tsv simulation/
+```
 ### Explored parametric space
 
 ```
@@ -86,4 +93,26 @@ heterozygosity = 0.01, 0.1, 0.5 (autosomal average heterozygosity in %)
 X_chromosomes = 1 2 5 10 (Mbp out of 20 Mbp reference)
 fraction_of_sperm = 0, 1, 5, 10, 25, 50 (0 is practically non-PGE system)
 sequencing_depth = 10x, 15x, 25x (1n coverage)
+```
+
+### Running it on cluster
+
+Let's create a conda enviorment for the analysis called `CSKS`.
+
+```
+conda create -n CSKS -c bioconda -c conda-forge msprime kmc python=3 numpy matplotlib wgsim pyfaidx samtools
+# I had to add a few package later on:
+# conda install -c bioconda wgsim
+# conda install -c bioconda pyfaidx
+# conda install -c bioconda samtools
+conda install -c r r
+# and install 'argparse' and 'minpack.lm' packages
+# install.packages('argparse')
+# install.packages('minpack.lm')
+```
+
+now with this conda enviorment we should be able to test one replicate
+
+```
+qsub -o logs -e logs -cwd -N power_analysis -V -pe smp64 2 -b yes "scripts/run_power_analysis_replicate.sh 0.001 10 25 15"
 ```
