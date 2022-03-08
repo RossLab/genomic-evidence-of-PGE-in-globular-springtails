@@ -5,6 +5,9 @@
 ## This is the automated script for computing genome characteristics
 ## from a kmer histogram file, k-mer size, and readlength
 
+## this code is from
+##    https://github.com/schatzlab/genomescope
+
 ## Number of rounds before giving up
 NUM_ROUNDS=4
 

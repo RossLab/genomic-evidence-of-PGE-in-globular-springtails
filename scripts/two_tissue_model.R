@@ -22,10 +22,36 @@ kmer_spectrum <- read.table(args$kmer_hist_file, col.names = c('coverage', 'freq
 
 write("loaded k-mer spectra", stderr())
 
-cov_range <- 5:120
+# removing errors from the model (removing all monotonicly decreasing values)
+min_coverage <- min(which(diff(kmer_spectrum$frequency) > 0)) - 1
+# and capping 99.9% of kmers in the dataset excluding erros
+max_coverage <- min(which(cumsum(kmer_spectrum$frequency[min_coverage:nrow(kmer_spectrum)]) / sum(kmer_spectrum$frequency[min_coverage:nrow(kmer_spectrum)]) > 0.999))
+cov_range <- min_coverage:max_coverage
 
-GenomeScope_model <- nls_4peak(kmer_spectrum[cov_range, 'coverage'], kmer_spectrum[cov_range, 'frequency'], 21, 28, 20e6, 40)
-PGE_model <- nlsLM_2peak_unconditional_peaks(kmer_spectrum[cov_range, 'coverage'], kmer_spectrum[cov_range, 'frequency'], 25, 10e6, 0.2)
+
+# to get coverage mode I just use second derivation
+second_deriv <- diff(sign(diff(kmer_spectrum$frequency[cov_range])))
+peak_covs <- kmer_spectrum$coverage[cov_range][which(second_deriv == -2) + 1]
+peak_heights <- kmer_spectrum$frequency[cov_range][which(second_deriv == -2) + 1]
+
+coverage_mode <- peak_covs[which.max(peak_heights)]
+coverage_mean <- weighted.mean(kmer_spectrum$coverage[cov_range], kmer_spectrum$frequency[cov_range])
+
+if (coverage_mode < coverage_mean){
+  cov_prior <- coverage_mode
+} else {
+  cov_prior <- (coverage_mode / 2)
+}
+
+length_prior <- sum(kmer_spectrum$coverage[cov_range] * kmer_spectrum$frequency[cov_range]) / cov_prior
+
+print("Priors: ")
+print(c(min_coverage, max_coverage))
+print(cov_prior)
+print(length_prior)
+
+GenomeScope_model <- nls_4peak(kmer_spectrum[cov_range, 'coverage'], kmer_spectrum[cov_range, 'frequency'], 21, cov_prior, length_prior)
+PGE_model <- nlsLM_2peak_unconditional_peaks(kmer_spectrum[cov_range, 'coverage'], kmer_spectrum[cov_range, 'frequency'], cov_prior, length_prior, 0.5)
 
 ###
 # summary of results
