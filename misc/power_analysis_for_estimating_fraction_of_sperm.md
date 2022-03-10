@@ -147,11 +147,12 @@ female = 10
 Let's create a conda enviorment for the analysis called `CSKS`.
 
 ```
-conda create -n CSKS -c bioconda -c conda-forge msprime kmc python=3 numpy matplotlib wgsim pyfaidx samtools
+conda create -n CSKS -c bioconda -c conda-forge msprime kmc python=3 numpy matplotlib wgsim pyfaidx samtools bowtie2 freebayes
 # I had to add a few package later on:
 # conda install -c bioconda wgsim
 # conda install -c bioconda pyfaidx
 # conda install -c bioconda samtools
+# conda install -c bioconda bowtie2
 # conda install -c bioconda freebayes
 conda install -c r r
 # and install 'argparse' and 'minpack.lm' packages
@@ -163,4 +164,6 @@ now with this conda enviorment we should be able to test one replicate
 
 ```
 qsub -o logs -e logs -cwd -N power_analysis -V -pe smp64 2 -b yes "scripts/run_power_analysis_replicate.sh 0.001 10 25 15"
+
+qsub -o logs -e logs -cwd -N power_analysis -V -pe smp64 4 -b yes "scripts/run_power_analysis_replicate.sh 0.001 1 25 20"
 ```
