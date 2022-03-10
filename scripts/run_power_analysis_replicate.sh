@@ -54,15 +54,34 @@ echo "Step 3 done: Reads were generated (simulation/sim_reads_R?.fq)"
 cp "$source_dir"/scripts/two_tissue_model.R "$source_dir"/scripts/two_tissue_model_functions.R scripts
 ls simulation/sim_reads_R?.fq > simulation/FILES
 
-kmc -k21 -t2 -m4 -ci1 -cs1000 @simulation/FILES simulation/kmcdb tmp
+kmc -k21 -t4 -m16 -ci1 -cs1000 @simulation/FILES simulation/kmcdb tmp
 kmc_tools transform simulation/kmcdb histogram output/kmcdb_k21.hist -cx1000
 
 Rscript scripts/two_tissue_model.R -i output/kmcdb_k21.hist -o output/two_tissue_model
 
 echo "Step 4 done: k-mer histogram generated and the model fit (output/kmcdb_k21.hist and output/two_tissue_model*)"
 
+REFERENCE=simulation/sim_reference
+bowtie2-build simulation/sim_reference.fasta $REFERENCE
 
-echo "Step 5 done: mapping coverage estimated (output/kmcdb_k21.hist and output/two_tissue_model*)"
+R1=simulation/sim_reads_R1.fq
+R2=simulation/sim_reads_R2.fq
+
+bowtie2 --very-sensitive-local -p 4 -x $REFERENCE \
+        -1 $R1 -2 $R2 \
+        --rg-id 1 --rg SM:rand --rg PL:ILLUMINA --rg LB:LIB_rand \
+        | samtools view -h -q -20 \
+        | samtools sort -O bam - > simulation/rand.rg.sorted.bam
+
+samtools depth simulation/rand.rg.sorted.bam | perl scripts/depth2windows.pl 10000 > output/per_window_coverage.tsv
+
+Rscript scripts/mapping_coverage_tab2cov_estimates.R -i output/per_window_coverage.tsv -o output/mapping_coverage
+
+echo "Step 5 done: mapping 1n and 2n coverages estimated"
+
+freebayes -f simulation/sim_reference.fasta -b simulation/rand.rg.sorted.bam --standard-filters --min-coverage 5 -p 2 > output/snp_calls_raw.vcf
+
+echo "Step 6 done: SNPs called"
 
 rm -r simulation
 rsync -av --remove-source-files $working_dir $source_dir/data/simulations/
