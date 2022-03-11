@@ -4,4 +4,5 @@ logs
 misc
 .snakemake/
 figures
-scripts/power_analysis_commnads.sh
+scripts/power_analysis_commands.sh
+

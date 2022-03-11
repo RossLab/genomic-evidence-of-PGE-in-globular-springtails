@@ -1,5 +1,6 @@
 
-cluster_string <- 'qsub -o logs -e logs -cwd -N power_analysis -V -pe smp64 4 -b yes -l h="bigbang"'
+# it would be possible to specify also the command as it is used to submit for the cluster
+# cluster_string <- 'qsub -o logs -e logs -cwd -N power_analysis -V -pe smp64 4 -b yes -l h="bigbang"'
 
 
 heterozygosity <- c(0.0001, 0.001, 0.003, 0.005)
@@ -11,11 +12,11 @@ parameter_combinations <- expand.grid(heterozygosity = heterozygosity, X_chromos
 
 parameter_combinations$paternal_depth <- parameter_combinations$sequencing_depth * (1 - parameter_combinations$fraction_of_sperm )
 
-commands <-	paste0(cluster_string,
-	                 ' "scripts/run_power_analysis_replicate.sh ',
-					              format(parameter_combinations$heterozygosity, scientific = F), ' ',
-						  		      parameter_combinations$X_chromosomes, ' ',
-							  			  parameter_combinations$sequencing_depth, ' ',
-								  		  parameter_combinations$paternal_depth, '"')
+commands <-	paste0(
+                         'scripts/run_power_analysis_replicate.sh ',
+                         format(parameter_combinations$heterozygosity, scientific = F), ' ',
+                         parameter_combinations$X_chromosomes, ' ',
+                         parameter_combinations$sequencing_depth, ' ',
+                         parameter_combinations$paternal_depth)
 
-writeLines(commands, 'scripts/power_analysis_commnads.sh')
+writeLines(commands, 'scripts/power_analysis_commands.sh')

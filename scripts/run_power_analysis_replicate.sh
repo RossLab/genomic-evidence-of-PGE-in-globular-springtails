@@ -2,7 +2,7 @@
 
 # qsub -o logs -e logs -cwd -N power_analysis -V -pe smp64 2 -b yes "scripts/run_power_analysis_replicate.sh 0.001 10 25 15"
 
-set -e
+# set -e
 
 theta=$1
 X_chromosomes=$2 # number of 1Mbp chromosomes that are X-linked.
@@ -11,7 +11,7 @@ maternal_coverage=$3
 paternal_coverage=$4
 
 source_dir=$(pwd)
-sim=sim_h"$theta"_X"$X_chromosomes"_m"$maternal_coverage"_p"$paternal_coverage"
+sim=sim_"$JOB_ID"_h"$theta"_X"$X_chromosomes"_m"$maternal_coverage"_p"$paternal_coverage"
 
 working_dir=/scratch/kjaron/"$sim"
 
@@ -60,6 +60,8 @@ kmc_tools transform simulation/kmcdb histogram output/kmcdb_k21.hist -cx1000
 Rscript scripts/two_tissue_model.R -i output/kmcdb_k21.hist -o output/two_tissue_model
 
 echo "Step 4 done: k-mer histogram generated and the model fit (output/kmcdb_k21.hist and output/two_tissue_model*)"
+
+cp "$source_dir"/scripts/depth2windows.pl "$source_dir"/scripts/mapping_coverage_tab2cov_estimates.R scripts
 
 REFERENCE=simulation/sim_reference
 bowtie2-build simulation/sim_reference.fasta $REFERENCE
