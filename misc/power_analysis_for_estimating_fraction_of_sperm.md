@@ -126,25 +126,21 @@ Rscript scripts/mapping_coverage_tab2cov_estimates.R -i simulation/per_window_co
 ```
 ### Explored parametric space
 
+These following values are what I consider a reasonable parametric space to explore. It's totalling ~300 simulations, each takes about 30'. The scripts require specified maternal and paternal coverage (rather than maternal coverage and fraction of sperm), so that will be handles internally in the R script bellow.
+
+
 ```
-heterozygosity = 0.01, 0.1, 0.5 (autosomal average heterozygosity in %)
+heterozygosity = 0.01, 0.1, 0.25, 0.5 (autosomal average heterozygosity in %)
 X_chromosomes = 1 2 5 10 (Mbp out of 20 Mbp reference)
-fraction_of_sperm = 0, 1, 5, 10, 25, 50 (0 is practically non-PGE system)
+fraction_of_sperm = 0, 0.01, 0.05, 0.10, 0.25, 0.50 (0 is practically non-PGE system)
 sequencing_depth = 10x, 15x, 25x (1n coverage)
-
-female = 25
-male = 25, 24.75, 23.75, 22.5, 18.75, 12.5
-
-female = 15
-male = 15, 14.85, 14.25, 13.50, 11.25, 7.50
-
-female = 10
-
 ```
+
+The empirical data suggest that the springtail will be the closest to the simulation "het = 0.25, X = 10, fraction_of_sperm = 0.25 and sequencing_depth = 15x". Note that while we were able to manually curate the data for the three focal species, these simulations have the models fitted with naively estimated priors from the data. We have not dedicated extensive effort in making this method complete solution, that will be a task for a future study.
 
 ### Running it on cluster
 
-Let's create a conda enviorment for the analysis called `CSKS`.
+The easiest way to reproduce the analysis is using conda, lets create an enviorment `CSKS` (evironment tested on Ubuntu 18.04 and Debian GNU/Linux 9).
 
 ```
 conda create -n CSKS -c bioconda -c conda-forge msprime kmc python=3 numpy matplotlib wgsim pyfaidx samtools bowtie2 freebayes
@@ -167,3 +163,58 @@ qsub -o logs -e logs -cwd -N power_analysis -V -pe smp64 2 -b yes "scripts/run_p
 
 qsub -o logs -e logs -cwd -N power_analysis -V -pe smp64 4 -b yes "scripts/run_power_analysis_replicate.sh 0.001 1 25 20"
 ```
+
+That works. We wronte a script [scripts/create_list_of_commands.R](scripts/create_list_of_commands.R) that generates a long list of commands for all the parameter combinations we are interested in.
+
+```bash
+Rscript scripts/create_list_of_commands.R
+```
+
+and now we can run all the commands. Note this is 288 submited jobs to the cluster, so check with your sysadmins that this is something ok to do. You will also need to adjust the cluster submission command (`qsub ...`). I will do that using GNU parallel.
+
+```
+# conda activate CSKS
+conda install -c conda-forge parallel
+
+parallel -j 1 'qsub -o logs -e logs -cwd -N power_analysis -V -pe smp64 4 -b yes -l h="bigbang" {}' :::: scripts/power_analysis_commands.sh
+```
+
+### post-simulation adjustments to the model
+
+I originally kept one point the error peak to give have `./\/\` kind of distributions (thinking that `.` will never mess it up), but it does, namely when the coverage is low and the disr looks more like this `./-\` (two peaks are blended). So I will remove this one small detail (TODO: add commit url) and rerun all the morels - I inteligently saved all the kmer spectra, so I don't need to rerun the whole analysis.
+
+```bash
+for sim in data/simulations/*; do
+    cp scripts/two_tissue_model* $sim/scripts
+    cd $sim
+    Rscript scripts/two_tissue_model.R -i output/kmcdb_k21.hist -o output/two_tissue_model
+    cd -
+done
+```
+
+
+And I wanted to pull all the figures to one place.
+
+```bash
+mkdir -p figures/simulated_two_tissue_models
+for sim in data/simulations/*; do sim=$(basename $sim); ln -s `pwd`/data/simulations/$sim/output/two_tissue_model_plot.png figures/simulated_two_tissue_models/"$sim".png ; done
+```
+
+### Explororing exceptions
+
+I found that in many cases of very low coverage, my automatic way of guessing priors made them too high and the model converged on very wild values. Here is one example
+
+```
+data/simulations/sim_95407_h0.0030_X5_m15_p7.5
+```
+
+So I adjusted those models (~20) by adding
+
+```
+if fraction_of_sperm < -0.2 or > 0.7:
+  rerun the model with 0.7 of the original prior
+if still within those crazy boundaries:
+  rerun the model with 0.5 of the original prior
+```
+
+which resolved all the cases (and would not affect any of the other estimates).

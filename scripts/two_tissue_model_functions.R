@@ -32,9 +32,9 @@ nls_4peak <- function(x, y, k, estKmercov, estLength, max_iterations = 40){
 
 # two tissue model
 nlsLM_2peak_unconditional_peaks <- function(x, y, kmerEst, lengthEst, hetEst = 0.6){
-  nlsLM(y ~ ((het       * dnbinom(x, size = kmercov   / bias, mu = kmercov)) +
+  nlsLM(y ~ ((het       * dnbinom(x, size = kmercov1  / bias, mu = kmercov1)) +
             ((1 - het)  * dnbinom(x, size = kmercov2  / bias, mu = kmercov2))) * length,
-        start = list(kmercov = kmerEst, kmercov2 = (2 * kmerEst), bias = 0.5, length = lengthEst, het = hetEst),
+        start = list(kmercov1 = kmerEst, kmercov2 = (2 * kmerEst), bias = 0.5, length = lengthEst, het = hetEst),
         control = list(minFactor=1e-12, maxiter=40))
 }
 
