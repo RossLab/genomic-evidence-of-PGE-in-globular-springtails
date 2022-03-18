@@ -307,6 +307,11 @@ Coverage plots:
 
     plots them all (`figures/mapping_coverages/*`).
 
+   power analyis:
+```
+    Rscript scripts/plot_power_analysis.R
+```
+
 ## Supplementary analyses
 
 
