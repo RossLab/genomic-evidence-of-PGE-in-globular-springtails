@@ -45,15 +45,15 @@ write(paste("Prior for genome length:", length_prior), stderr())
 
 write(paste("Trying several coverage priors"), stderr())
 
-PGE_model_mode <- nlsLM_2peak_unconditional_peaks(kmer_spectrum[cov_range, 'coverage'], kmer_spectrum[cov_range, 'frequency'], coverage_mode, length_prior, 0.5)
-PGE_model_mean <- nlsLM_2peak_unconditional_peaks(kmer_spectrum[cov_range, 'coverage'], kmer_spectrum[cov_range, 'frequency'], coverage_mean, length_prior, 0.5)
-PGE_model_seven_tenths_mean <- nlsLM_2peak_unconditional_peaks(kmer_spectrum[cov_range, 'coverage'], kmer_spectrum[cov_range, 'frequency'], coverage_mean * 0.7, length_prior, 0.5)
-PGE_model_half_mean <- nlsLM_2peak_unconditional_peaks(kmer_spectrum[cov_range, 'coverage'], kmer_spectrum[cov_range, 'frequency'], coverage_mean / 2, length_prior, 0.5)
+PGE_model_mode <- nlsLM_2peak_proportional_peaks(kmer_spectrum[cov_range, 'coverage'], kmer_spectrum[cov_range, 'frequency'], coverage_mode, length_prior, 0.5)
+PGE_model_mean <- nlsLM_2peak_proportional_peaks(kmer_spectrum[cov_range, 'coverage'], kmer_spectrum[cov_range, 'frequency'], coverage_mean, length_prior, 0.5)
+PGE_model_seven_tenths_mean <- nlsLM_2peak_proportional_peaks(kmer_spectrum[cov_range, 'coverage'], kmer_spectrum[cov_range, 'frequency'], coverage_mean * 0.7, length_prior, 0.5)
+PGE_model_half_mean <- nlsLM_2peak_proportional_peaks(kmer_spectrum[cov_range, 'coverage'], kmer_spectrum[cov_range, 'frequency'], coverage_mean / 2, length_prior, 0.5)
 
 GenomeScope_model <- nls_4peak(kmer_spectrum[cov_range, 'coverage'], kmer_spectrum[cov_range, 'frequency'], 21, coverage_mode / 2, length_prior)
 
 PGE_models <- list(PGE_model_half_mean, PGE_model_seven_tenths_mean, PGE_model_mode, PGE_model_mean)
-best_model <- which.min(round(sapply(PGE_models, deviance)))
+best_model <- which.min(sapply(PGE_models, deviance))
 PGE_model <- PGE_models[[best_model]]
 
 ###
@@ -62,6 +62,15 @@ PGE_model <- PGE_models[[best_model]]
 
 genomescope_estimates <- coef(GenomeScope_model)
 PGE_estimates <- coef(PGE_model)
+
+proportion_coeficient <- which(names(PGE_estimates) == 'proportion')
+
+PGE_estimates[proportion_coeficient] <- PGE_estimates['kmercov2'] * PGE_estimates['proportion']
+names(PGE_estimates)[proportion_coeficient] <- 'kmercov1'
+
+propotion_CI <- confint2(PGE_model)['proportion',]
+names(propotion_CI) <- c('CI_l_prop', 'CI_u_prop')
+PGE_estimates <- c(PGE_estimates, propotion_CI)
 
 write("GenomeScope estimates: ", stderr())
 write(paste(names(genomescope_estimates), '=', round(genomescope_estimates, 4)), stderr())

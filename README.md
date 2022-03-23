@@ -241,45 +241,34 @@ for ind in WW5-6 WW5-4 BH3-2 WW3-1 WW2-1 WW1-2 WW2-5 WW5-1 WW5-5 WW1-4 WW2-6 WW5
 done
 ```
 
-### plotting notes
+To plot autosomal and X chromosome covera supports (`figures/het_autosomal_allele_supports/autosomal_and_X_variant_coverages_<SAMPLE>.png`) run to get the male plots
 
+```bash
+Rscript scripts/plot_heterozygous_autosomal_allele_coverages_BH3-2.R
+Rscript scripts/plot_heterozygous_autosomal_allele_coverages_Afus1.R
+Rscript scripts/plot_heterozygous_autosomal_allele_coverages_Ocin2.R
+```
 
-Allele cov ratio plots:
-  1. BH2-3 (`figures/het_autosomal_allele_supports/autosomal_and_X_variant_coverages_BH3-2.png`) plotted by
+and for females run
 
-  ```bash
-  Rscript scripts/plot_heterozygous_autosomal_allele_coverages_BH3-2.R
-  ```
+All females
 
-  using:
-   -  `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_X.tsv`
-   -  `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_A.tsv`
+```bash
+  for ind in WW5-6 WW5-4 BH3-2 WW3-1 WW2-1 WW1-2 WW2-5 WW5-1 WW5-5 WW1-4 WW2-6 WW5-3; do
+   Rscript scripts/plot_heterozygous_autosomal_allele_coverages.R "$ind" data/SNP_calls/run0/"$ind"_asn_snps.tsv figures/het_autosomal_allele_supports/"$ind".png;
+  done
+```
 
-  2. Afus1
+### data to be deposited:
 
-  ```bash
-  Rscript scripts/plot_heterozygous_autosomal_allele_coverages_Afus1.R
-  ```
+Heterozygous SNP analysis:
+ - `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_X.tsv`
+ - `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_A.tsv`
+ - `data/mapped_reads/Afus1_per_scf_cov_medians.tsv`
+ - `data/SNP_calls/freebayes_Afus_filt_sorted_Afus1_A.tsv`
+ - `data/SNP_calls/freebayes_Afus_filt_sorted_Afus1_X.tsv`
+ - `data/SNP_calls/run0/*_asn_snps.tsv`
 
-  using:
-   - `data/mapped_reads/Afus1_per_scf_cov_medians.tsv`
-   - `tables/chr_assignments_Afus1.tsv`
-   - `data/SNP_calls/freebayes_Afus_filt_sorted_Afus1_A.tsv`
-   - `data/SNP_calls/freebayes_Afus_filt_sorted_Afus1_X.tsv`
-
-   3. Ocin2
-
-   ```bash
-   Rscript scripts/plot_heterozygous_autosomal_allele_coverages_Ocin2.R
-   ```   
-
-   4. All females
-
-   ```bash
-   for ind in WW5-6 WW5-4 BH3-2 WW3-1 WW2-1 WW1-2 WW2-5 WW5-1 WW5-5 WW1-4 WW2-6 WW5-3; do
-     Rscript scripts/plot_heterozygous_autosomal_allele_coverages.R "$ind" data/SNP_calls/run0/"$ind"_asn_snps.tsv figures/het_autosomal_allele_supports/"$ind".png;
-   done
-   ```
 
 Coverage plots:
   kmers:

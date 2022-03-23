@@ -151,12 +151,18 @@ conda create -n CSKS -c bioconda -c conda-forge msprime kmc python=3 numpy matpl
 # conda install -c bioconda bowtie2
 # conda install -c bioconda freebayes
 conda install -c r r
-# and install 'argparse' and 'minpack.lm' packages
-# install.packages('argparse')
-# install.packages('minpack.lm')
 ```
 
-now with this conda enviorment we should be able to test one replicate
+Now open `R` and install the required R packages
+
+```
+# run within R
+install.packages('argparse')
+install.packages('minpack.lm')
+install.packages('nlstools')
+```
+
+now quit R again. With this newly created conda enviorment we should be able to test one replicate
 
 ```
 qsub -o logs -e logs -cwd -N power_analysis -V -pe smp64 2 -b yes "scripts/run_power_analysis_replicate.sh 0.001 10 25 15"
