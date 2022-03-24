@@ -31,12 +31,12 @@ write.table(female_parameters, 'tables/kmer_spectra_modeling_female_parameters.t
 
 # FITTING FEMALE PGE MODELS
 # # here, using regular GenomeScope estimates of length and heterozygosity as fixed parameters to reduce complexity of the models
-female1_PGE_model <- nlsLM_2peak_unconditional_peaks(female1_kmer_spectrum[cov_range, 'coverage'], female1_kmer_spectrum[cov_range, 'frequency'], 15, 280e6, 0.2)
+female1_PGE_model <- nlsLM_2peak_proportional_peaks(female1_kmer_spectrum[cov_range, 'coverage'], female1_kmer_spectrum[cov_range, 'frequency'], 15, 280e6, 0.2)
 
-female2_PGE_model <- nlsLM_2peak_unconditional_peaks(female2_kmer_spectrum[cov_range, 'coverage'], female2_kmer_spectrum[cov_range, 'frequency'], 15, 280e6, 0.2)
+female2_PGE_model <- nlsLM_2peak_proportional_peaks(female2_kmer_spectrum[cov_range, 'coverage'], female2_kmer_spectrum[cov_range, 'frequency'], 15, 280e6, 0.2)
 
 cov_range <- 7:120 # this one has a bit wider error profile
-female3_PGE_model <- nlsLM_2peak_unconditional_peaks(female3_kmer_spectrum[cov_range, 'coverage'], female3_kmer_spectrum[cov_range, 'frequency'], 15, 280e6, 0.2)
+female3_PGE_model <- nlsLM_2peak_proportional_peaks(female3_kmer_spectrum[cov_range, 'coverage'], female3_kmer_spectrum[cov_range, 'frequency'], 15, 280e6, 0.2)
 
 
 
@@ -50,8 +50,7 @@ cov_range <- 5:150
 
 Ocin2_Genomescope <- nls_4peak(Ocin2_kmer_spectrum[cov_range, 'coverage'],  Ocin2_kmer_spectrum[cov_range, 'frequency'], 21, 50, 280e6, 40)
 
-Ocin2_PGE_model <- nlsLM_2peak_unconditional_peaks(Ocin2_kmer_spectrum[cov_range, 'coverage'],  Ocin2_kmer_spectrum[cov_range, 'frequency'], 50, 300e6, 0.3)
-Ocin2_PGE_model2 <- nlsLM_2peak_proportional_peaks(Ocin2_kmer_spectrum[cov_range, 'coverage'],  Ocin2_kmer_spectrum[cov_range, 'frequency'], 50, 300e6, 0.3)
+Ocin2_PGE_model <- nlsLM_2peak_proportional_peaks(Ocin2_kmer_spectrum[cov_range, 'coverage'],  Ocin2_kmer_spectrum[cov_range, 'frequency'], 50, 300e6, 0.3)
 
 ####################
 ## A. fusca males ##
@@ -71,8 +70,7 @@ Afus1_genomescope <- nls_4peak(Afus1_kmer_spectrum[Afus1_range, 'coverage'],
                          Afus1_kmer_spectrum[Afus1_range, 'frequency'],
                          k, eyeballed_Afus1_coverage, 300e6)
 
-Afus1_PGE_model <- nlsLM_2peak_unconditional_peaks(Afus1_kmer_spectrum[Afus1_range, 'coverage'],  Afus1_kmer_spectrum[Afus1_range, 'frequency'], 55, 280e6, 0.5)
-Afus1_PGE_model2 <- nlsLM_2peak_proportional_peaks(Afus1_kmer_spectrum[Afus1_range, 'coverage'],  Afus1_kmer_spectrum[Afus1_range, 'frequency'], 55, 280e6, 0.5)
+Afus1_PGE_model <- nlsLM_2peak_proportional_peaks(Afus1_kmer_spectrum[Afus1_range, 'coverage'],  Afus1_kmer_spectrum[Afus1_range, 'frequency'], 55, 280e6, 0.5)
 
 # MALE Bh3-2
 # BH3_male_k21_file = './data/genome_profiling/BH3-2/kmer_k21_full.hist'
@@ -92,8 +90,7 @@ BH32_genomescope <- nls_4peak(BH32_kmer_spectrum[BH32_range, 'coverage'],
                               eyeballed_coverage_BH32,
                               300e6)
 
-BH32_PGE_model <- nlsLM_2peak_unconditional_peaks(BH32_kmer_spectrum[BH32_range, 'coverage'],  BH32_kmer_spectrum[BH32_range, 'frequency'], eyeballed_coverage_BH32, 280e6, 0.5)
-BH32_PGE_model2 <- nlsLM_2peak_proportional_peaks(BH32_kmer_spectrum[BH32_range, 'coverage'],  BH32_kmer_spectrum[BH32_range, 'frequency'], eyeballed_coverage_BH32, 280e6, 0.5)
+BH32_PGE_model <- nlsLM_2peak_proportional_peaks(BH32_kmer_spectrum[BH32_range, 'coverage'],  BH32_kmer_spectrum[BH32_range, 'frequency'], eyeballed_coverage_BH32, 280e6, 0.5)
 ###################
 ## MODEL SUMMARY ##
 ###################
@@ -102,18 +99,27 @@ inds <- c('Afus1', 'BH3-2', 'Ocin2', females)
 GenomeScope_models <- list(Afus1_genomescope, BH32_genomescope, Ocin2_Genomescope, female1_model, female2_model, female3_model)
 PGE_models <- list(Afus1_PGE_model, BH32_PGE_model, Ocin2_PGE_model, female1_PGE_model, female2_PGE_model, female3_PGE_model)
 
-PGE_1n_coverages <- sapply(PGE_models, function(m){ coef(m)['kmercov1'] })
 PGE_2n_coverages <- sapply(PGE_models, function(m){ coef(m)['kmercov2'] })
+PGE_1n_coverages <- PGE_2n_coverages * sapply(PGE_models, function(m){ coef(m)['proportion'] })
 
-data.frame(ind = inds, 'cov_1n' = PGE_1n_coverages, 'cov_2n' = PGE_2n_coverages)
+
+
+two_tissure_model_frame <- data.frame(ind = inds, 'cov_1n' = round(PGE_1n_coverages, 2), 'cov_2n' = round(PGE_2n_coverages, 2))
 # save the estimates?
 
+two_tissure_model_frame$two_tissue_sperm <- round(1 - ((PGE_2n_coverages - PGE_1n_coverages) / PGE_1n_coverages), 3)
+
 # confidence intervals?
-nlstools::confint2(Afus1_PGE_model2, level = 0.95, method = "asymptotic")
-nlstools::confint2(BH32_PGE_model2, level = 0.95, method = "asymptotic")
-nlstools::confint2(Ocin2_PGE_model2, level = 0.95, method = "asymptotic")
+# nlstools::confint2(Afus1_PGE_model, level = 0.95, method = "asymptotic")
+# nlstools::confint2(BH32_PGE_model, level = 0.95, method = "asymptotic")
+# nlstools::confint2(Ocin2_PGE_model, level = 0.95, method = "asymptotic")
 
+CIs <- t(sapply(PGE_models, nlstools::confint2, level = 0.95, method = "asymptotic"))
+two_tissure_model_frame[, 'cov_1n/cov_2n'] <- round(sapply(PGE_models, function(m){ coef(m)['proportion'] }), 3)
+two_tissure_model_frame[, 'cov_1n/cov_2n_CI_l'] <- round(CIs[, 1], 3)
+two_tissure_model_frame[, 'cov_1n/cov_2n_CI_u'] <- round(CIs[, 6], 3)
 
+write.table(two_tissure_model_frame, 'tables/two_tissue_model_empirical.tsv', col.names = T, quote = F, row.names = F, sep = '\t')
 
 ###################
 ## VISUALISATION ##

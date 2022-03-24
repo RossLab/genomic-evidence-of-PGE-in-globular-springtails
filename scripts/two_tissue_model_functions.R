@@ -42,7 +42,8 @@ nlsLM_2peak_proportional_peaks <- function(x, y, kmerEst, lengthEst, hetEst = 0.
 
 predict_1n_peak_nlsLM_2peak_unconditional <- function(model){
   model_env <- model$m$getEnv()
-  model_env$het * dnbinom(model_env$x, size = model_env$kmercov1   / model_env$bias, mu = model_env$kmercov1) * model_env$length
+  cov_1n <- model_env$kmercov2 * model_env$proportion
+  model_env$het * dnbinom(model_env$x, size = cov_1n   / model_env$bias, mu = cov_1n) * model_env$length
 }
 
 predict_2n_peak_nlsLM_2peak_unconditional <- function(model){
@@ -66,8 +67,8 @@ coverage_barplot <- function(bar_heights, bar_positions, font_size = 1, width = 
 plot_PGE_model <- function(model, xlim = NA, vertical_lines = T, cex = 1, bty = 'o', legend = T){
   x <- model$m$getEnv()$x
   y <- model$m$getEnv()$y
-  cov_1n <- coef(model)['kmercov1']
   cov_2n <- coef(model)['kmercov2']
+  cov_1n <- cov_2n * coef(model)['proportion']
   monoploid_col <- 'darkorchid4'
   diploid_col <- 'chocolate'
 
