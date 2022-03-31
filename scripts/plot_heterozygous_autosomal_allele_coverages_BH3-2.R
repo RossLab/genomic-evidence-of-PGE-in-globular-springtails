@@ -31,8 +31,18 @@ cex_legend <- 1 #0.95
 xlim <- c(0, 50)
 ylim <- c(0, 0.1)
 
-mean_minor <- c(11.3033301, 11.3033301) #
-mean_major <- c(18.3541031, 18.3541031) #
+#### calculate the coverage expecation!
+BH32_sperm <- read.table('tables/two_tissue_model_empirical.tsv', header = T, row.names = 1)['BH3-2', 'two_tissue_sperm']
+cov_A <- mean(ref_A_snps$ref_cov)
+# using the equation from the paper c_x = c_A / (2 - f_h)
+cov_maternal <- cov_A / (2 - BH32_sperm)
+cov_paternal <- cov_A - cov_maternal
+
+mean_minor <- c(cov_paternal, cov_paternal) #
+mean_major <- c(cov_maternal, cov_maternal) #
+
+print(paste("Paternal expecation:", round(cov_paternal, 2)))
+print(paste("Maternal expecation:", round(cov_maternal, 2)))
 
 coverage_data <- list(X = informative_X_snps$total_cov, A_minor = informative_A_snps$cov_minor, A_major = informative_A_snps$total_cov - informative_A_snps$cov_minor)
 main <- ''# paste('Coverages supporting autosomal heterozygous alleles in', ind)

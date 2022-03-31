@@ -108,6 +108,7 @@ two_tissure_model_frame <- data.frame(ind = inds, 'cov_1n' = round(PGE_1n_covera
 # save the estimates?
 
 two_tissure_model_frame$two_tissue_sperm <- round(1 - ((PGE_2n_coverages - PGE_1n_coverages) / PGE_1n_coverages), 3)
+two_tissure_model_frame[, 'overdispersal'] <- round(sapply(PGE_models, function(m){ coef(m)['bias'] }), 3)
 
 # confidence intervals?
 # nlstools::confint2(Afus1_PGE_model, level = 0.95, method = "asymptotic")

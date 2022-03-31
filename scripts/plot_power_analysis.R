@@ -57,6 +57,7 @@ print('True positives: ')
 sum(all_sims$true_positive)
 print('Decomposed by simulated parameters: ')
 print('Fraction of sperm: ')
+table(all_sims[all_sims$true_positive, 'simulated_sperm'])
 table(all_sims[all_sims$true_positive, 'simulated_sperm']) / 48
 print('Number of X chrmosomes (out of 20): ')
 table(all_sims[all_sims$true_positive, 'X']) / 60
