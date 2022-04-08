@@ -97,14 +97,12 @@ WW5_3_k21_file = './data/genome_profiling/WW5-3/kmer_k21_full.hist'
 WW5_5_k21_file = './data/genome_profiling/WW5-5/kmer_k21_full.hist'
 WW2_6_k21_file = './data/genome_profiling/WW2-6/kmer_k21_full.hist'
 
-source('scripts/genome_models.R') # load genome models (see the script for their details)
-
 ### female
 feAfus1_kmer_spectrum <- read.table(WW5_3_k21_file, col.names = c('coverage', 'frequency'))
 feBH32_kmer_spectrum <- read.table(WW5_5_k21_file, col.names = c('coverage', 'frequency'))
 female3_kmer_spectrum <- read.table(WW2_6_k21_file, col.names = c('coverage', 'frequency'))
 cov_range <- 5:120
-plot(frequency ~ coverage, data = feBH32_kmer_spectrum[cov_range, ])
+# plot(frequency ~ coverage, data = feBH32_kmer_spectrum[cov_range, ])
 
 #
 female1_model <- nls_4peak(feAfus1_kmer_spectrum[cov_range, 'coverage'], feAfus1_kmer_spectrum[cov_range, 'frequency'], 21, 15, 300e6, 40)
@@ -137,8 +135,6 @@ Ocin2_k21_file = './data/genome_profiling/Ocin2/kmer_k21_full.hist'
 Ocin2_kmer_spectrum <- read.table(Ocin2_k21_file, col.names = c('coverage', 'frequency'))
 cov_range <- 5:150
 
-source('scripts/genome_models.R') # load genome models (see the script for their details)
-
 Ocin2_Genomescope <- nls_4peak(Ocin2_kmer_spectrum[cov_range, 'coverage'],  Ocin2_kmer_spectrum[cov_range, 'frequency'], 21, 50, 280e6, 40)
 
 Ocin2_PGE_model <- nlsLM_2peak_unconditional_peaks(Ocin2_kmer_spectrum[cov_range, 'coverage'],  Ocin2_kmer_spectrum[cov_range, 'frequency'], 50, 300e6, 0.3)
@@ -156,7 +152,6 @@ k = 21
 eyeballed_Afus1_coverage = 50
 
 ### original - works
-# source('scripts/genome_models.R')
 Afus1_genomescope <- nls_4peak(Afus1_kmer_spectrum[Afus1_range, 'coverage'],
                          Afus1_kmer_spectrum[Afus1_range, 'frequency'],
                          k, eyeballed_Afus1_coverage, 300e6)
@@ -174,7 +169,6 @@ k = 17
 eyeballed_coverage_BH32 = 15
 
 ### original - works
-# source('scripts/genome_models.R')
 BH32_genomescope <- nls_4peak(BH32_kmer_spectrum[BH32_range, 'coverage'],
                               BH32_kmer_spectrum[BH32_range, 'frequency'],
                               k,
@@ -208,6 +202,28 @@ data.frame(ind = inds, 'cov_1n' = PGE_1n_coverages, 'cov_2n' = PGE_2n_coverages)
 # lines(predict(Afus1_genomescope, response = T) ~ Afus1_kmer_spectrum[Afus1_range, 'coverage'])
 # lines(predict(Afus1_PGE_model, response = T) ~ Afus1_kmer_spectrum[Afus1_range, 'coverage'], col = 'red', lty = 2, pwd = 2)
 
-plot_PGE_model(Afus1_PGE_model)
-plot_PGE_model(BH32_PGE_model)
-plot_PGE_model(female3_PGE_model)
+png('figures/Ocin2_PGE_model.png')
+	plot_PGE_model(Ocin2_PGE_model)
+  lines(predict(Ocin2_Genomescope, response = T) ~ Ocin2_Genomescope$m$getEnv()$x, lwd = 3, col = 'grey', lty = 3)
+dev.off()
+
+png('figures/Afus1_PGE_model.png')
+	plot_PGE_model(Afus1_PGE_model)
+  lines(predict(Afus1_genomescope, response = T) ~ Afus1_genomescope$m$getEnv()$x, lwd = 3, col = 'grey', lty = 3)
+dev.off()
+
+png('figures/BH3-2_PGE_model.png')
+	plot_PGE_model(BH32_PGE_model)
+dev.off()
+
+png('figures/WW5-3_PGE_model.png')
+	plot_PGE_model(female1_PGE_model)
+dev.off()
+
+png('figures/WW5-5_PGE_model.png')
+	plot_PGE_model(female2_PGE_model)
+dev.off()
+
+png('figures/WW2-6_PGE_model.png')
+	plot_PGE_model(female3_PGE_model)
+dev.off()
