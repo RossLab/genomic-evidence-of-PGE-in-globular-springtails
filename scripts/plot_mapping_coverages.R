@@ -64,7 +64,7 @@ write.table(coverage_est_tab, "tables/resequencing_coverage_estimates.tsv", row.
 ####
 
 prefix <- 'figures/mapping_coverages/'
-suffix <- '_coverage_plot.png'
+suffix <- '_coverage_plot.pdf'
 
 # Afus1
 ind <- 'BH3-2'
@@ -92,7 +92,8 @@ if (est_1 > est_2){
     coverage_est_tab[ind, 'diploid'] <- est_2
 }
 
-png(figurename, units="in", width=5, height=5, res=300)
+# png(figurename, units="in", width=5, height=5, res=300)
+pdf(figurename)
 
   par(mar = c(4, 4, 1, 1) + 0.1)
 
@@ -101,8 +102,8 @@ png(figurename, units="in", width=5, height=5, res=300)
        freq = F, weight = ind_tab[subset, 'len'],
        col = 'grey', border = NA,
        main = '',
-       xlim = c(0, 60), ylim = c(0, 0.30),
-       xlab = 'Mean scaffold coverage')
+       xlim = c(0, 50), ylim = c(0, 0.30),
+       xlab = 'Mean scaffold coverage', cex.axis = 1.3, cex.lab = 1.3)
 	lines(scf_ks, lwd = 2)
 
   lines(c(coverage_est_tab[ind, 'haploid'], coverage_est_tab[ind, 'haploid']), c(0, 1000), lty = 2, lwd = 2)
@@ -122,7 +123,8 @@ ind_tab <- cov_tab[cov_tab[, ind] < filt_quantile & cov_tab[, 'len'] > 20000, c(
 adjust = 1
 scf_ks <- density(ind_tab[, ind], bw = "SJ", adjust = adjust, weights = ind_tab$len / sum(ind_tab$len))
 
-png(figurename, units="in", width=5, height=4, res=300)
+# png(figurename, units="in", width=5, height=4, res=300)
+pdf(figurename)
 
   par(mar = c(4, 4, 1, 1) + 0.1)
 
@@ -131,8 +133,8 @@ png(figurename, units="in", width=5, height=4, res=300)
        freq = F, weight = ind_tab[subset, 'len'],
        col = 'grey', border = NA,
        main = '',
-       xlim = c(0, 140), ylim = c(0, 0.20),
-       xlab = 'Mean scaffold coverage')
+       xlim = c(0, 150), ylim = c(0, 0.20),
+       xlab = 'Mean scaffold coverage', cex.axis = 1.3, cex.lab = 1.3)
 	lines(scf_ks, lwd = 2)
 
   lines(c(coverage_est_tab[ind, 'haploid'], coverage_est_tab[ind, 'haploid']), c(0, 1000), lty = 2, lwd = 2)
@@ -178,7 +180,8 @@ cov_2n <- get_peak(scf_ks)
 cov_1n <- get_peak(scf_ks, 2)
 # [1] 53.4376
 
-png(figurename, units="in", width=5, height=4, res=300)
+# png(figurename, units="in", width=5, height=4, res=300)
+pdf(figurename)
 
   par(mar = c(4, 4, 1, 1) + 0.1)
 
@@ -188,7 +191,7 @@ png(figurename, units="in", width=5, height=4, res=300)
        col = 'grey', border = NA,
        main = '',
        xlim = c(0, 150), ylim = c(0, 0.05),
-       xlab = 'Mean scaffold coverage')
+       xlab = 'Mean scaffold coverage', cex.axis = 1.3, cex.lab = 1.3)
   lines(scf_ks, lwd = 2)
 
 

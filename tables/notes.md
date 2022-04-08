@@ -1,0 +1,3 @@
+`tables/Afus_mean_coverage_table.tsv` - have all the coverages calculated as depth / len of scaffold, with an exception of Afus, where it's mean depth per scf. It's not entirely accurate as it's not covering 0 coverge bases, but for the reference sequence it's practically the same. Since the mapped reads were the input for the assembly, practically all bases have something mapped to them. And I did not want to burn more computational hours on something this silly.
+
+`tables/power_analysis_complete.tsv` - for each combination of parameters there is estaimated 1n and 2n peak from kmers, mapping and parameters estimated by regular genomescope. This data frame is used by `scripts/plot_power_analysis.R` script. 

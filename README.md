@@ -96,6 +96,9 @@ genomescope.R -i data/Ocin1/kmer_db/kmer_k21.hist -o data/Ocin1/genome_profiling
 The reads are mapped on the reference using `bowtie2` and sorted using `samtools` as follows
 
 ```sh
+# indexing reference
+# bowtie2-build data/reference/Afus1/genome.fa.gz $REFERENCE
+
 bowtie2 --very-sensitive-local -p 16 -x $REFERENCE \
         -1 $R1 -2 $R2 \
         --rg-id "$RG_ID" --rg SM:"$SAMPLE" --rg PL:ILLUMINA --rg LB:LIB_"$SAMPLE" \
@@ -153,7 +156,11 @@ Calculation of expectation of allele coverages under different scenarios
 
 #### k-mer based expecations
 
-TODO
+The k-mer based expecation of maternal and paternal coverage is tricky. We could - in theory - use a formula to convert kmer coverage to genomic coverage, that is however in practice very imprecise. Instead, we use the estimated fraction of sperm, mapping coverage estimate and the formula we used for the two tissue model.
+
+The original formula is `f_h = 1 - (c_A - c_X) / c_X`, where `f_h` is fraction of sperm, and `c_` are respective coverages of X chromosomes and autosomes. With a few modiciations we can adjust the equation to be in a form `c_X = c_A / (2 - f_h)` which is also the expecation for the maternal autosomal alleles. Therefore the paternal expecation is `c_A - c_X`.
+
+In the case of BH3-2 `f_h = 0.353` and `c_A = 28.73` (which I took as mean of all homozygous variants on autosomes so we avoid any circularity in the argument). Then `c_m = c_X = 17.44` and therefore `c_p = 11.29`.
 
 #### Coverage estimates
 
@@ -234,49 +241,38 @@ TODO
 
 ```bash
 for ind in WW5-6 WW5-4 BH3-2 WW3-1 WW2-1 WW1-2 WW2-5 WW5-1 WW5-5 WW1-4 WW2-6 WW5-3; do
-  Rscript scripts/plot_heterozygous_autosomal_allele_coverages.R "$ind" data/SNP_calls/run0/"$ind"_asn_snps.tsv figures/het_autosomal_allele_supports/"$ind".png;
+  Rscript scripts/plot_heterozygous_autosomal_allele_coverages.R "$ind" data/SNP_calls/run0/"$ind"_asn_snps.tsv figures/het_autosomal_allele_supports/"$ind";
 done
 ```
 
-### plotting notes
+To plot autosomal and X chromosome covera supports (`figures/het_autosomal_allele_supports/autosomal_and_X_variant_coverages_<SAMPLE>.png`) run to get the male plots
 
+```bash
+Rscript scripts/plot_heterozygous_autosomal_allele_coverages_BH3-2.R
+Rscript scripts/plot_heterozygous_autosomal_allele_coverages_Afus1.R
+Rscript scripts/plot_heterozygous_autosomal_allele_coverages_Ocin2.R
+```
 
-Allele cov ratio plots:
-  1. BH2-3 (`figures/het_autosomal_allele_supports/autosomal_and_X_variant_coverages_BH3-2.png`) plotted by
+and for females run
 
-  ```bash
-  Rscript scripts/plot_heterozygous_autosomal_allele_coverages_BH3-2.R
-  ```
+All females
 
-  using:
-   -  `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_X.tsv`
-   -  `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_A.tsv`
+```bash
+  for ind in WW5-6 WW5-4 BH3-2 WW3-1 WW2-1 WW1-2 WW2-5 WW5-1 WW5-5 WW1-4 WW2-6 WW5-3; do
+   Rscript scripts/plot_heterozygous_autosomal_allele_coverages.R "$ind" data/SNP_calls/run0/"$ind"_asn_snps.tsv figures/het_autosomal_allele_supports/"$ind".png;
+  done
+```
 
-  2. Afus1
+### data to be deposited:
 
-  ```bash
-  Rscript scripts/plot_heterozygous_autosomal_allele_coverages_Afus1.R
-  ```
+Heterozygous SNP analysis:
+ - `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_X.tsv`
+ - `data/SNP_calls/freebayes_Afus_filt_sorted_BH3-2_A.tsv`
+ - `data/mapped_reads/Afus1_per_scf_cov_medians.tsv`
+ - `data/SNP_calls/freebayes_Afus_filt_sorted_Afus1_A.tsv`
+ - `data/SNP_calls/freebayes_Afus_filt_sorted_Afus1_X.tsv`
+ - `data/SNP_calls/run0/*_asn_snps.tsv`
 
-  using:
-   - `data/mapped_reads/Afus1_per_scf_cov_medians.tsv`
-   - `tables/chr_assignments_Afus1.tsv`
-   - `data/SNP_calls/freebayes_Afus_filt_sorted_Afus1_A.tsv`
-   - `data/SNP_calls/freebayes_Afus_filt_sorted_Afus1_X.tsv`
-
-   3. Ocin2
-
-   ```bash
-   Rscript scripts/plot_heterozygous_autosomal_allele_coverages_Ocin2.R
-   ```   
-
-   4. All females
-
-   ```bash
-   for ind in WW5-6 WW5-4 BH3-2 WW3-1 WW2-1 WW1-2 WW2-5 WW5-1 WW5-5 WW1-4 WW2-6 WW5-3; do
-     Rscript scripts/plot_heterozygous_autosomal_allele_coverages.R "$ind" data/SNP_calls/run0/"$ind"_asn_snps.tsv figures/het_autosomal_allele_supports/"$ind".png;
-   done
-   ```
 
 Coverage plots:
   kmers:
@@ -303,6 +299,11 @@ Coverage plots:
     ```
 
     plots them all (`figures/mapping_coverages/*`).
+
+   power analyis:
+```
+    Rscript scripts/plot_power_analysis.R
+```
 
 ## Supplementary analyses
 
