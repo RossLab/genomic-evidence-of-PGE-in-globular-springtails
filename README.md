@@ -2,7 +2,7 @@
 
 This is a supplementary material. It allows, nearly perfect, replication of the study and exact code that was used to generate all the results and figures.
 
-You can also check [ESEB talk about preliminary results of this work](https://youtu.be/LKBG5AqkUqg?t=4646).
+You can also check [ESEB 2021 talk about preliminary results of this work](https://youtu.be/LKBG5AqkUqg?t=4646).
 
 ## Springtails collected and sequenced
 
@@ -41,7 +41,7 @@ This section shows
 
 #### k-mer based estimation of two tissue model
 
-This approach is complementary to to the mapping approach, the advantage is that it can be done directly on the k-mer spectra and it's does not require assembling and mapping reads (and therefore avoids all the problems with these processes). The drawback is that each male k-mer spectrum will have co-founded paternal heterozygous sites with X chromosome and maternal autosomal sites, therefore the interpretation of the first k-mer peak is not as streightforward as of the first peak of the mapping coverage.
+This approach is complementary to to the mapping approach, the advantage is that it can be done directly on the k-mer spectra and it's does not require assembling and mapping reads (and therefore avoids all the problems with these processes). The drawback is that each male k-mer spectrum will have co-founded paternal heterozygous sites with X chromosome and maternal autosomal sites, therefore the interpretation of the first k-mer peak is not as straightforward as of the first peak of the mapping coverage.
 
 #### The choice of k
 
@@ -67,23 +67,37 @@ And do this for all the samples.
 
 #### estimating 1n and 2n coverage from k-mer spectra
 
-These models are largely insprired by [GenomsScope source code](https://github.com/schatzlab/genomescope) and GenomeScope is included among the used models. They are adjusted and simplified models that are estimating 1n and 2n peaks indipendently (i.e. approach similar to the coverage analysis of mapped reads). The simplification of GenomeScope model lays is two aspects - first, we completelly ignore anything that occurs in the genome more than once or twice (kmers in the 1n and 2n peaks), while GenomeScope has an explicit fit of duplications within the genome. Second is that we removed the term that is estimating genome-wise heterozygosity knowing k-mer length. Instead we use term `het`, which simply proportion of 1n and 2n k-mers that are in the 1n peak. That is because we don't actually desire to estmate hererozygosity and the model converges better we simplify the term. Hence the model to fit the two peaks indipendently is
+These models are largely inspired by [GenomsScope source code](https://github.com/schatzlab/genomescope) and GenomeScope is included among the used models. They are adjusted and simplified models that are estimating 1n and 2n peaks separately (i.e. approach similar to the coverage analysis of mapped reads). The simplification of GenomeScope model lays is two aspects - first, we completely ignore anything that occurs in the genome more than once or twice (k-mers in the 1n and 2n peaks), compared to GenomeScope which has an explicit fit of duplications within the genome. Second is that we removed the term that is estimating genome-wise heterozygosity knowing k-mer length. Instead we use term `het`, which simply proportion of 1n and 2n k-mers that are in the 1n peak. That is because we don't actually desire to estmate heterozygosity and the model converges better we simplify the term. The trick to model the two peaks separatelly is in adding of a term `proportion` that models the coverage ratio between first and the second peak, which GenomeScope has fixed to 1:2.
 
 ```{R}
 # model, x - coverages, y - coverage frequencies, kmerEst, lengthEst, hetEst - starting values for the respective parameters
-# note that kmerEst (and 2*) is a starting value for both kmercov and kmercov2 - which are the two indipendent estimates of positions of the coverage peaks, bias is the overdispersal term
-nlsLM_2peak_unconditional_peaks <- function(x, y, kmerEst, lengthEst, hetEst = 0.6){
-  nlsLM(y ~ ((het       * dnbinom(x, size = kmercov   / bias, mu = kmercov)) +
-            ((1 - het)  * dnbinom(x, size = kmercov2  / bias, mu = kmercov2))) * length,
-        start = list(kmercov = kmerEst, kmercov2 = (2 * kmerEst), bias = 0.5, length = lengthEst, het = hetEst),
-        control = list(minFactor=1e-12, maxiter=40))
+# note the starting value for proportion is 0.5, meaning that out starting values is the GenomeScope-like estimate
+nlsLM_2peak_proportional_peaks <- function(x, y, kmerEst, lengthEst, hetEst = 0.6){
+  two_tissue_model <- nlsLM(y ~ ((het       * dnbinom(x, size = (proportion * kmercov2)  / bias, mu = (proportion * kmercov2))) +
+                                ((1 - het)  * dnbinom(x, size = kmercov2  / bias, mu = kmercov2))) * length,
+          start = list(proportion = 0.5, kmercov2 = 2 * kmerEst, bias = 0.5, length = lengthEst, het = hetEst),
+          control = list(minFactor=1e-12, maxiter=40))
+  return(two_tissue_model)
 }
 ```
 
 All the fits of the two tissue model are calculated in the [scripts/kmer_estimates_of_two_tissue_model.R](scripts/kmer_estimates_of_two_tissue_model.R) script.
 
-TODO: generate a nice output table directly within the script
-TODO: generate a few nice plots I should show here
+The main reason we formulate the model in this way is that we can calculate asymptotic confidence intervals of all fitted variables, including `proportion`. Now, if the CI of `proportion` spans 0.5, we conclude there was no significant deviation from 1:2 coverage ratio.
+
+To run the model on all the calculated k-mer spectra, run
+
+```
+Rscript scripts/kmer_estimates_of_two_tissue_model.R
+```
+
+This will generate a bunch of plots and a [table](tables/two_tissue_model_empirical.tsv) with estimates for 2 _A. fusca_ males, 3 _A. fusca_ females and one _O. cincta_ (non-PGE springtial) male (the table is included).  
+
+To test how the method works on samples with various sizes of X chromosomes, levels of heterozygosity, fraction of sperm and various sequencing coverages, we performed a **Power analysis**, check the [documentation](misc/power_analysis_for_estimating_fraction_of_sperm.md) for more details. The summary table with all the results is [here](tables/power_analysis_complete.tsv), to plot the analyis for all the scenarios, run
+
+```
+Rscript scripts/plot_power_analysis.R
+```
 
 We have also used classical GenomeScope model to validate our approach. The genomescope was fit as follows
 
@@ -114,9 +128,9 @@ snakemake map_all
 
 Note, when I was mapping reads, I messed up something with the reference sample and run this script `scripts/mapping_reference_reads_Afus1.sh` instead. However, I think I fixed the problem afterwards so this note should be (hopefully) outdated.
 
-From mapped reads I extrated mapped
-
 **Allacma**
+
+Generate per scaffold coverages
 
 ```
 samtools depth data/mapped_reads/BH3-2.rg.sorted.rmdup.bam | scripts/depth2cov_per_contig.py > data/mapped_reads/BH3-2_cov_per_scf.tsv
@@ -151,14 +165,13 @@ Rscript scripts/assign-X-linked-scaffolds.R
 
 ### Expected coverages of heterozygous loci
 
-Calculation of expectation of allele coverages under different scenarios
-    Table 1: table of expected coverages in the two males
+Calculation of expectation of allele coverages under different scenarios.
 
 #### k-mer based expecations
 
 The k-mer based expecation of maternal and paternal coverage is tricky. We could - in theory - use a formula to convert kmer coverage to genomic coverage, that is however in practice very imprecise. Instead, we use the estimated fraction of sperm, mapping coverage estimate and the formula we used for the two tissue model.
 
-The original formula is `f_h = 1 - (c_A - c_X) / c_X`, where `f_h` is fraction of sperm, and `c_` are respective coverages of X chromosomes and autosomes. With a few modiciations we can adjust the equation to be in a form `c_X = c_A / (2 - f_h)` which is also the expecation for the maternal autosomal alleles. Therefore the paternal expecation is `c_A - c_X`.
+The original formula is `f_h = 1 - (c_A - c_X) / c_X`, where `f_h` is fraction of sperm, and `c_` are respective coverages of X chromosomes and autosomes. With a few modifications we can adjust the equation to be in a form `c_X = c_A / (2 - f_h)` which is also the expectation for the maternal autosomal alleles. Therefore the paternal expecation is `c_A - c_X`.
 
 In the case of BH3-2 `f_h = 0.353` and `c_A = 28.73` (which I took as mean of all homozygous variants on autosomes so we avoid any circularity in the argument). Then `c_m = c_X = 17.44` and therefore `c_p = 11.29`.
 
@@ -170,7 +183,7 @@ As the result, we have [the table](https://github.com/RossLab/genomic-evidence-o
 
 ### Testing PGE using allele coverages
 
-TODO
+To test PGE, we called variants and sort them out to chromosomes. The test was based on expectation that the sperm in male _A. fusca_ contains the maternal genome only. If that's the case, there is an expected coverage shift of maternal to paternal alleles which is proportional to the fraction of sperm in the sample (see calculated expectation above).
 
 #### variant calling
 
@@ -210,7 +223,7 @@ python3 scripts/sort_variants_with_respect_to_chromosomes.py -o data/SNP_calls/f
 python3 scripts/sort_variants_with_respect_to_chromosomes.py -o data/SNP_calls/freebayes_Ocin2_filt_sorted data/SNP_calls/freebayes_Ocin2_filt.vcf tables/chr_assignments_Ocin1.tsv
 ```
 
-First, I will extract just ne needed info about the variants in BH3-2, Afus1 and Ocin2
+First, I will extract just the needed info about the variants in BH3-2, Afus1 and Ocin2
 
 ```bash
 i=10
@@ -235,7 +248,7 @@ Now we have a bunch of `data/SNP_calls/*_sorted_X.tsv` and `data/SNP_calls/*_sor
 
 #### hypothesis testing
 
-TODO
+Now we have the SNP calls, we need to sort out if one allele have always a higher coverage than the other and that this difference is not simply due to coverage variation.
 
 ### Heterozygous SNP analysis
 
@@ -273,42 +286,15 @@ Heterozygous SNP analysis:
  - `data/SNP_calls/freebayes_Afus_filt_sorted_Afus1_X.tsv`
  - `data/SNP_calls/run0/*_asn_snps.tsv`
 
-
 Coverage plots:
-  kmers:
-    ```bash
-      for dir in data/genome_profiling/*; do
-        SAMPLE=$(echo $dir | cut -f 3 -d "/");
-        genomescope.R -i $dir/kmer_k21_full.hist -o $dir -n $SAMPLE;
-      done
-    ```
-
-  mapping:
-    Afus1:
-     - `data/mapped_reads/Afus1_cov_per_scf.tsv`
-
-    BH3-2:
-     - `data/mapped_reads/BH3-2_cov_per_scf.tsv`
-
-    Ocin2:
-     - `data/mapped_reads/Ocin2_cov_per_scf.tsv`
-
-
-    ```
-      Rscript scripts/plot_mapping_coverages.R
-    ```
-
-    plots them all (`figures/mapping_coverages/*`).
-
-   power analyis:
-```
-    Rscript scripts/plot_power_analysis.R
-```
+  - `data/mapped_reads/Afus1_cov_per_scf.tsv`
+  - `data/mapped_reads/BH3-2_cov_per_scf.tsv`
+  - `data/mapped_reads/Ocin2_cov_per_scf.tsv`
 
 ## Supplementary analyses
 
 
-### Potential causes of the inacurately high estimate of sperm in Ocin2
+### Potential causes of the inaccurately high estimate of sperm in Ocin2
 
 Using mapped reads of `Ocin2` to the reference genome (ID), we estimated 1n and 2n coverage to be 53.43x and 101.12x respectively. According to the two tissue model this would imply that `Ocin2` - a species with completely regular meiosis, has ~10% of the body form of cells with the same number of sex chromosomes and
 
